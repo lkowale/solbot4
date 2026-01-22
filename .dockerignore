@@ -1,0 +1,37 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+build/
+install/
+log/
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.eggs
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Docker
+.docker
+
+# CI/CD
+.github
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Test artifacts
+.pytest_cache
+.coverage
+htmlcov/

@@ -1,0 +1,41 @@
+services:
+  solbot4-dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: solbot4-dev
+    privileged: true
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - ROS_DOMAIN_ID=0
+    volumes:
+      - ./src:/ros2_ws/src:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ~/.Xauthority:/root/.Xauthority:rw
+    stdin_open: true
+    tty: true
+    command: bash
+
+  solbot4-sim:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: solbot4-sim
+    privileged: true
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - ROS_DOMAIN_ID=0
+      - GAZEBO_MODEL_PATH=/ros2_ws/src/description/models
+    volumes:
+      - ./src:/ros2_ws/src:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ~/.Xauthority:/root/.Xauthority:rw
+    stdin_open: true
+    tty: true
+    command: bash -c "source /ros2_ws/install/setup.bash && ros2 launch simulation sim.launch.py"
+    depends_on:
+      - solbot4-dev

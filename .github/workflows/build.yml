@@ -1,0 +1,99 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  ROS_DISTRO: jazzy
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    container:
+      image: ros:jazzy-ros-base
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            python3-pip \
+            python3-colcon-common-extensions \
+            ros-jazzy-navigation2 \
+            ros-jazzy-nav2-bringup \
+            ros-jazzy-robot-state-publisher \
+            ros-jazzy-joint-state-publisher \
+            ros-jazzy-xacro \
+            ros-jazzy-tf2-tools \
+            ros-jazzy-robot-localization \
+            ros-jazzy-ros-gz
+
+      - name: Install Python dependencies
+        run: pip3 install -r requirements.txt
+
+      - name: Install ROS dependencies
+        run: |
+          rosdep update --rosdistro=jazzy
+          rosdep install --from-paths src --ignore-src -r -y
+
+      - name: Build workspace
+        run: |
+          . /opt/ros/jazzy/setup.sh
+          colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Run tests
+        run: |
+          . /opt/ros/jazzy/setup.sh
+          . install/setup.sh
+          colcon test
+          colcon test-result --verbose
+
+  lint:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install linting tools
+        run: |
+          pip install flake8 black mypy
+
+      - name: Run flake8
+        run: flake8 src/ --max-line-length=100 --ignore=E501,W503
+
+      - name: Check formatting with black
+        run: black --check src/
+
+  docker:
+    runs-on: ubuntu-24.04
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.dev
+          push: false
+          tags: solbot4:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

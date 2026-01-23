@@ -46,8 +46,6 @@ def generate_launch_description():
         'Y': LaunchConfiguration('yaw', default='0.00'),
     }
 
-    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
-
     # Declare launch arguments
     declare_namespace_cmd = DeclareLaunchArgument(
         'namespace', default_value='', description='Top-level namespace'
@@ -109,7 +107,6 @@ def generate_launch_description():
             {'use_sim_time': use_sim_time,
              'robot_description': Command(['xacro', ' ', robot_sdf])}
         ],
-        remappings=remappings,
     )
 
     # RViz
@@ -121,7 +118,6 @@ def generate_launch_description():
         output='screen',
         arguments=['-d', os.path.join(desc_dir, 'rviz', 'config.rviz')],
         parameters=[{'use_sim_time': use_sim_time}],
-        remappings=remappings,
     )
 
     # Gazebo world processing

@@ -62,8 +62,8 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(pkg_dir, 'params', 'nav2_params.yaml'),
-        description='Full path to the ROS2 parameters file')
+        default_value=os.path.join(pkg_dir, 'params', 'nav2_params_basic.yaml'),
+        description='Full path to the ROS2 parameters file (basic or extended)')
 
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='true',
@@ -165,7 +165,9 @@ def generate_launch_description():
                 name='lifecycle_manager_navigation',
                 output='screen',
                 arguments=['--ros-args', '--log-level', log_level],
-                parameters=[{'autostart': autostart, 'node_names': lifecycle_nodes}]),
+                parameters=[{'use_sim_time': use_sim_time,
+                             'autostart': autostart,
+                             'node_names': lifecycle_nodes}]),
         ]
     )
 
@@ -175,7 +177,7 @@ def generate_launch_description():
         name='nav2_container',
         package='rclcpp_components',
         executable='component_container_isolated',
-        parameters=[configured_params, {'autostart': autostart}],
+        parameters=[configured_params, {'use_sim_time': use_sim_time, 'autostart': autostart}],
         remappings=remappings,
         output='screen')
 
@@ -233,7 +235,9 @@ def generate_launch_description():
                         package='nav2_lifecycle_manager',
                         plugin='nav2_lifecycle_manager::LifecycleManager',
                         name='lifecycle_manager_navigation',
-                        parameters=[{'autostart': autostart, 'node_names': lifecycle_nodes}]),
+                        parameters=[{'use_sim_time': use_sim_time,
+                                     'autostart': autostart,
+                                     'node_names': lifecycle_nodes}]),
                 ],
             )
         ]

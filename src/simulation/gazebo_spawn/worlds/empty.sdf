@@ -29,8 +29,8 @@
       name="gz::sim::systems::Imu">
     </plugin>
     <plugin
-      filename="ignition-gazebo-navsat-system"
-      name="ignition::gazebo::systems::NavSat">
+      filename="gz-sim-navsat-system"
+      name="gz::sim::systems::NavSat">
     </plugin>
 
     <!-- GPS coordinates (default location) -->

@@ -60,8 +60,8 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(nav2_bringup_dir, 'params', 'nav2_params.yaml'),
-        description='Nav2 parameters file')
+        default_value=os.path.join(nav2_bringup_dir, 'params', 'nav2_params_basic.yaml'),
+        description='Nav2 parameters file (use nav2_params_extended.yaml for custom planner)')
 
     # Gazebo simulation with robot spawn
     gazebo_cmd = IncludeLaunchDescription(
@@ -89,7 +89,9 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_transform_publisher_map_odom',
-        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
+        arguments=['--frame-id', 'map', '--child-frame-id', 'odom',
+                   '--x', '0', '--y', '0', '--z', '0',
+                   '--roll', '0', '--pitch', '0', '--yaw', '0'],
         parameters=[{'use_sim_time': use_sim_time}],
     )
 

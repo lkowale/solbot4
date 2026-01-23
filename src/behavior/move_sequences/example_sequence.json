@@ -1,0 +1,20 @@
+[
+  {
+    "cmd_vel_lin_x": 1.0,
+    "cmd_vel_ang_z": 0.0,
+    "distance": 1.0,
+    "time_allowance": 10.0
+  },
+  {
+    "cmd_vel_lin_x": 1.0,
+    "cmd_vel_ang_z": 0.5,
+    "distance": 1.0,
+    "time_allowance": 10.0
+  },
+  {
+    "cmd_vel_lin_x": -1.0,
+    "cmd_vel_ang_z": 0.0,
+    "distance": 1.0,
+    "time_allowance": 10.0
+  }
+]

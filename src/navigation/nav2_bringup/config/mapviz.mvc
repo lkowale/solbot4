@@ -1,0 +1,126 @@
+capture_directory: "~"
+fixed_frame: map
+target_frame: map
+fix_orientation: false
+rotate_90: false
+enable_antialiasing: true
+show_displays: true
+show_status_bar: true
+show_capture_tools: true
+window_width: 1860
+window_height: 1011
+view_scale: 0.0573085509
+offset_x: -4.22430754
+offset_y: 11.2838011
+use_latest_transforms: true
+background: "#a0a0a4"
+image_transport: raw
+displays:
+  - type: mapviz_plugins/tile_map
+    name: new display
+    config:
+      visible: true
+      collapsed: false
+      custom_sources:
+        - base_url: https://tile.openstreetmap.org/{level}/{x}/{y}.png
+          max_zoom: 19
+          name: OpenStreetMap
+          type: wmts
+      bing_api_key: ""
+      source: OpenStreetMap
+  - type: mapviz_plugins/navsat
+    name: new display
+    config:
+      visible: true
+      collapsed: false
+      topic: /gps/fix
+      color: "#00ff00"
+      draw_style: points
+      position_tolerance: 0
+      buffer_size: 2000
+      qos_depth: 10
+      qos_history: 1
+      qos_reliability: 1
+      qos_durability: 2
+  - type: mapviz_plugins/tf_frame
+    name: new display
+    config:
+      visible: true
+      collapsed: false
+      frame: base_footprint
+      color: "#f66151"
+      draw_style: arrows
+      position_tolerance: 0
+      buffer_size: 20
+      static_arrow_sizes: false
+      arrow_size: 25
+  - type: mapviz_plugins/odometry
+    name: new display
+    config:
+      visible: false
+      collapsed: false
+      topic: /odometry/gps
+      color: "#9141ac"
+      draw_style: arrows
+      position_tolerance: 0
+      buffer_size: 2000
+      show_laps: false
+      show_covariance: false
+      show_all_covariances: false
+      static_arrow_sizes: false
+      arrow_size: 25
+      show_timestamps: 0
+      qos_depth: 10
+      qos_history: 1
+      qos_reliability: 1
+      qos_durability: 2
+  - type: mapviz_plugins/path
+    name: new display
+    config:
+      visible: true
+      collapsed: false
+      topic: /line_path
+      color: "#77767b"
+      qos_depth: 10
+      qos_history: 1
+      qos_reliability: 1
+      qos_durability: 2
+  - type: mapviz_plugins/path
+    name: new display
+    config:
+      visible: true
+      collapsed: false
+      topic: /to_start_path
+      color: "#c0bfbc"
+      qos_depth: 10
+      qos_history: 1
+      qos_reliability: 1
+      qos_durability: 2
+  - type: mapviz_plugins/robot_image
+    name: new display
+    config:
+      visible: true
+      collapsed: false
+      frame: base_footprint
+      image: /home/aa/ros2_ws/src/solbot3/sol3_bringup/config/robot_icon.png
+      width: 2
+      height: 1
+      offset_x: -1
+      offset_y: 0
+  - type: mapviz_plugins/pose
+    name: new display
+    config:
+      visible: true
+      collapsed: false
+      topic: /lookahead_point
+      color: "#dc8add"
+      draw_style: lines
+      position_tolerance: 0
+      buffer_size: 20
+      show_laps: false
+      static_arrow_sizes: false
+      arrow_size: 25
+      qos_depth: 10
+      qos_history: 1
+      qos_reliability: 1
+      qos_durability: 2

@@ -1,0 +1,238 @@
+// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2022 Joshua Wallace
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef MOVE_BEHAVIOR_HPP_
+#define MOVE_BEHAVIOR_HPP_
+
+#include <chrono>
+#include <memory>
+#include <string>
+#include <utility>
+#include <limits>
+
+
+#include "nav2_behaviors/timed_behavior.hpp"
+#include "opennav_coverage_msgs/action/move.hpp"
+#include "nav2_util/node_utils.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
+
+namespace move_behavior
+{
+
+using nav2_behaviors::TimedBehavior;
+using nav2_behaviors::ResultStatus;
+using nav2_behaviors::Status;
+using ActionT = opennav_coverage_msgs::action::Move;
+// template<typename ActionT = opennav_coverage_msgs::action::Move>
+class Move : public nav2_behaviors::TimedBehavior<ActionT>
+{
+  using CostmapInfoType = nav2_core::CostmapInfoType;
+
+public:
+  /**
+   * @brief A constructor for nav2_behaviors::DriveOnHeading
+   */
+  Move()
+  : nav2_behaviors::TimedBehavior<ActionT>(),
+    feedback_(std::make_shared<typename ActionT::Feedback>()),
+    cmd_vel_lin_x_(0.0),
+    cmd_vel_ang_z_(0.0),
+    distance_(0.0),
+    simulate_ahead_time_(0.0)
+  {
+  }
+
+  ~Move() = default;
+
+  /**
+   * @brief Initialization to run behavior
+   * @param command Goal to execute
+   * @return Status of behavior
+   */
+   ResultStatus onRun(const std::shared_ptr<const typename ActionT::Goal> command) override
+  {
+
+    command_time_allowance_ = command->time_allowance;
+    cmd_vel_lin_x_ = command->cmd_vel_lin_x;
+    cmd_vel_ang_z_ = command->cmd_vel_ang_z;
+    distance_ = command->distance;
+    end_time_ = this->clock_->now() + command_time_allowance_;
+
+    if (!nav2_util::getCurrentPose(
+        initial_pose_, *this->tf_, this->global_frame_, this->robot_base_frame_,
+        this->transform_tolerance_))
+    {
+      RCLCPP_ERROR(this->logger_, "Initial robot pose is not available.");
+      return ResultStatus{Status::FAILED, ActionT::Result::TF_ERROR};
+    }
+//     RCLCPP_INFO(
+//   this->logger_,
+//   "Initial pose: x=%.3f, y=%.3f, z=%.3f, orientation=(%.3f, %.3f, %.3f, %.3f)",
+//   initial_pose_.pose.position.x,
+//   initial_pose_.pose.position.y,
+//   initial_pose_.pose.position.z,
+//   initial_pose_.pose.orientation.x,
+//   initial_pose_.pose.orientation.y,
+//   initial_pose_.pose.orientation.z,
+//   initial_pose_.pose.orientation.w
+// );
+    return ResultStatus{Status::SUCCEEDED, ActionT::Result::NONE};
+  }
+
+  /**
+   * @brief Loop function to run behavior
+   * @return Status of behavior
+   */
+  ResultStatus onCycleUpdate() override
+  {
+    rclcpp::Duration time_remaining = end_time_ - this->clock_->now();
+    if (time_remaining.seconds() < 0.0 && command_time_allowance_.seconds() > 0.0) {
+      this->stopRobot();
+      RCLCPP_WARN(
+        this->logger_,
+        "Exceeded time allowance before reaching the DriveOnHeading goal - Exiting DriveOnHeading");
+      return ResultStatus{Status::FAILED, ActionT::Result::TIMEOUT};
+    }
+
+    geometry_msgs::msg::PoseStamped current_pose;
+    if (!nav2_util::getCurrentPose(
+        current_pose, *this->tf_, this->global_frame_, this->robot_base_frame_,
+        this->transform_tolerance_))
+    {
+      RCLCPP_ERROR(this->logger_, "Current robot pose is not available.");
+      return ResultStatus{Status::FAILED, ActionT::Result::TF_ERROR};
+    }
+//     RCLCPP_INFO(
+//   this->logger_,
+//   "Current pose: x=%.3f, y=%.3f, z=%.3f, orientation=(%.3f, %.3f, %.3f, %.3f)",
+//   current_pose.pose.position.x,
+//   current_pose.pose.position.y,
+//   current_pose.pose.position.z,
+//   current_pose.pose.orientation.x,
+//   current_pose.pose.orientation.y,
+//   current_pose.pose.orientation.z,
+//   current_pose.pose.orientation.w
+// );
+    double diff_x = initial_pose_.pose.position.x - current_pose.pose.position.x;
+    double diff_y = initial_pose_.pose.position.y - current_pose.pose.position.y;
+    double distance = hypot(diff_x, diff_y);
+
+    feedback_->distance_traveled = distance;
+    this->action_server_->publish_feedback(feedback_);
+
+    if (distance >= std::fabs(distance_)) {
+      this->stopRobot();
+      return ResultStatus{Status::SUCCEEDED, ActionT::Result::NONE};
+    }
+
+    auto cmd_vel = std::make_unique<geometry_msgs::msg::TwistStamped>();
+    cmd_vel->header.stamp = this->clock_->now();
+    cmd_vel->header.frame_id = this->robot_base_frame_;
+    cmd_vel->twist.linear.y = 0.0;
+    cmd_vel->twist.angular.z = cmd_vel_ang_z_;
+    cmd_vel->twist.linear.x = cmd_vel_lin_x_;
+
+    // geometry_msgs::msg::Pose2D pose2d;
+    // pose2d.x = current_pose.pose.position.x;
+    // pose2d.y = current_pose.pose.position.y;
+    // pose2d.theta = tf2::getYaw(current_pose.pose.orientation);
+
+    // if (!isCollisionFree(distance, cmd_vel->twist, pose2d)) {
+    //   this->stopRobot();
+    //   RCLCPP_WARN(this->logger_, "Collision Ahead - Exiting DriveOnHeading");
+    //   return ResultStatus{Status::FAILED, ActionT::Result::COLLISION_AHEAD};
+    // }
+
+    this->vel_pub_->publish(std::move(cmd_vel));
+
+    return ResultStatus{Status::RUNNING, ActionT::Result::NONE};
+  }
+
+  /**
+   * @brief Method to determine the required costmap info
+   * @return costmap resources needed
+   */
+  CostmapInfoType getResourceInfo() override {return CostmapInfoType::LOCAL;}
+
+protected:
+  /**
+   * @brief Check if pose is collision free
+   * @param distance Distance to check forward
+   * @param cmd_vel current commanded velocity
+   * @param pose2d Current pose
+   * @return is collision free or not
+   */
+  bool isCollisionFree(
+    const double & distance,
+    const geometry_msgs::msg::Twist & cmd_vel,
+    geometry_msgs::msg::Pose2D & pose2d)
+  {
+    // Simulate ahead by simulate_ahead_time_ in this->cycle_frequency_ increments
+    int cycle_count = 0;
+    double sim_position_change;
+    const double diff_dist = abs(distance_) - distance;
+    const int max_cycle_count = static_cast<int>(this->cycle_frequency_ * simulate_ahead_time_);
+    geometry_msgs::msg::Pose2D init_pose = pose2d;
+    bool fetch_data = true;
+
+    while (cycle_count < max_cycle_count) {
+      sim_position_change = cmd_vel.linear.x * (cycle_count / this->cycle_frequency_);
+      pose2d.x = init_pose.x + sim_position_change * cos(init_pose.theta);
+      pose2d.y = init_pose.y + sim_position_change * sin(init_pose.theta);
+      cycle_count++;
+
+      if (diff_dist - abs(sim_position_change) <= 0.) {
+        break;
+      }
+
+      if (!this->local_collision_checker_->isCollisionFree(pose2d, fetch_data)) {
+        return false;
+      }
+      fetch_data = false;
+    }
+    return true;
+  }
+
+  /**
+   * @brief Configuration of behavior action
+   */
+  void onConfigure() override
+  {
+    auto node = this->node_.lock();
+    if (!node) {
+      throw std::runtime_error{"Failed to lock node"};
+    }
+
+    nav2_util::declare_parameter_if_not_declared(
+      node,
+      "simulate_ahead_time", rclcpp::ParameterValue(2.0));
+    node->get_parameter("simulate_ahead_time", simulate_ahead_time_);
+  }
+
+  typename ActionT::Feedback::SharedPtr feedback_;
+
+  geometry_msgs::msg::PoseStamped initial_pose_;
+  double cmd_vel_lin_x_;
+  double cmd_vel_ang_z_;
+  double distance_;
+  rclcpp::Duration command_time_allowance_{0, 0};
+  rclcpp::Time end_time_;
+  double simulate_ahead_time_;
+  
+};
+
+}  // namespace move_behavior
+
+#endif  // MOVE_BEHAVIOR_HPP_

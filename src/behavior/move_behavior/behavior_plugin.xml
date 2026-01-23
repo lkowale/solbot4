@@ -1,0 +1,5 @@
+<library path="move_behavior_plugin">
+  <class type="move_behavior::Move" base_class_type="nav2_core::Behavior">
+    <description>Behavior that moves robot by given distance direction and twist</description>
+  </class>
+</library>

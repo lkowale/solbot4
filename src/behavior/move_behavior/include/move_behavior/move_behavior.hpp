@@ -24,7 +24,7 @@
 
 
 #include "nav2_behaviors/timed_behavior.hpp"
-#include "opennav_coverage_msgs/action/move.hpp"
+#include "solbot4_msgs/action/move.hpp"
 #include "nav2_util/node_utils.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 
@@ -34,8 +34,7 @@ namespace move_behavior
 using nav2_behaviors::TimedBehavior;
 using nav2_behaviors::ResultStatus;
 using nav2_behaviors::Status;
-using ActionT = opennav_coverage_msgs::action::Move;
-// template<typename ActionT = opennav_coverage_msgs::action::Move>
+using ActionT = solbot4_msgs::action::Move;
 class Move : public nav2_behaviors::TimedBehavior<ActionT>
 {
   using CostmapInfoType = nav2_core::CostmapInfoType;

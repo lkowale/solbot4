@@ -65,5 +65,5 @@ navsat_transform:
     zero_altitude: true
     broadcast_cartesian_transform: false
     publish_filtered_gps: true
-    use_odometry_yaw: true
+    use_odometry_yaw: false
     wait_for_datum: false

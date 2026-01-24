@@ -23,7 +23,7 @@
   <depend>nav2_costmap_2d</depend>
   <depend>nav2_core</depend>
   <depend>pluginlib</depend>
-  <depend>opennav_coverage_msgs</depend>
+  <depend>solbot4_msgs</depend>
   <depend>nav2_behaviors</depend>
 
   <test_depend>ament_lint_auto</test_depend>

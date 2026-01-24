@@ -42,8 +42,12 @@ class OriginPublisher(Node):
             origin_qos
         )
 
-        # Timer to publish origin at 1 Hz
-        self.timer = self.create_timer(1.0, self.publish_origin)
+        # Publish immediately for early subscribers
+        self.publish_origin()
+
+        # Timer to republish origin every 10 seconds for late subscribers
+        # (origin never changes, so infrequent publishing is fine)
+        self.timer = self.create_timer(10.0, self.publish_origin)
 
         self.get_logger().info(
             f'Origin Publisher started with origin: '

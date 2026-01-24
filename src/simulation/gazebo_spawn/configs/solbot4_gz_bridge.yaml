@@ -36,9 +36,9 @@
   gz_type_name: "gz.msgs.NavSat"
   direction: GZ_TO_ROS
 
-# Command velocity
-- ros_topic_name: "cmd_vel"
-  gz_topic_name: "/cmd_vel"
+# Command velocity (preprocessed for Ackermann reverse steering)
+- ros_topic_name: "cmd_vel_ackermann"
+  gz_topic_name: "/cmd_vel_ackermann"
   ros_type_name: "geometry_msgs/msg/Twist"
   gz_type_name: "gz.msgs.Twist"
   direction: ROS_TO_GZ

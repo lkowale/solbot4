@@ -1,0 +1,21 @@
+# Goal definition
+float32 cmd_vel_lin_x
+float32 cmd_vel_ang_z
+float32 distance
+builtin_interfaces/Duration time_allowance
+---
+# Result definition
+builtin_interfaces/Duration total_elapsed_time
+
+# Error codes
+uint16 NONE=0
+uint16 UNKNOWN=720
+uint16 TIMEOUT=721
+uint16 TF_ERROR=722
+uint16 COLLISION_AHEAD=723
+uint16 INVALID_INPUT=724
+
+uint16 error_code
+---
+# Feedback definition
+float32 distance_traveled

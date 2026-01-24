@@ -1,0 +1,21 @@
+# Goal definition
+string sequence_file
+uint16 segment_idx
+float32 segment_distance_traveled
+---
+# Result definition
+builtin_interfaces/Duration total_elapsed_time
+
+# Error codes
+uint16 NONE=0
+uint16 UNKNOWN=720
+uint16 TIMEOUT=721
+uint16 TF_ERROR=722
+uint16 COLLISION_AHEAD=723
+uint16 INVALID_INPUT=724
+
+uint16 error_code
+---
+# Feedback definition
+uint16 current_segment
+float32 distance_traveled

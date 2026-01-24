@@ -1,0 +1,4 @@
+float32 cmd_vel_lin_x
+float32 cmd_vel_ang_z
+float32 distance
+builtin_interfaces/Duration time_allowance

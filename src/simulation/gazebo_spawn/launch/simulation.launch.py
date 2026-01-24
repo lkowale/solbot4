@@ -175,6 +175,17 @@ def generate_launch_description():
         }.items()
     )
 
+    # Ackermann cmd_vel preprocessor - inverts angular.z when reversing
+    # This fixes the Gazebo AckermannSteering plugin behavior for reverse motion
+    ackermann_preprocessor = Node(
+        package='solbot4_gazebo_spawn',
+        executable='ackermann_cmd_vel_preprocessor.py',
+        name='ackermann_cmd_vel_preprocessor',
+        namespace=namespace,
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
+    )
+
     # Create launch description
     ld = LaunchDescription()
 
@@ -198,5 +209,6 @@ def generate_launch_description():
     ld.add_action(gazebo_client)
     ld.add_action(start_robot_state_publisher_cmd)
     ld.add_action(rviz_cmd)
+    ld.add_action(ackermann_preprocessor)
 
     return ld

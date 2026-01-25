@@ -186,6 +186,36 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
+    # GPS odometry covariance injector - adds covariance to navsat_transform output
+    # Needed because Gazebo GPS sensor may output zero covariance
+    odom_covariance_injector = Node(
+        package='solbot4_gazebo_spawn',
+        executable='odom_covariance_injector.py',
+        name='odom_covariance_injector',
+        namespace=namespace,
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'pose_covariance_x': 0.01,
+            'pose_covariance_y': 0.01,
+        }],
+    )
+
+    # IMU covariance injector - adds covariance to Gazebo IMU output
+    imu_covariance_injector = Node(
+        package='solbot4_gazebo_spawn',
+        executable='imu_covariance_injector.py',
+        name='imu_covariance_injector',
+        namespace=namespace,
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'orientation_covariance': 0.01,
+            'angular_velocity_covariance': 0.01,
+            'linear_acceleration_covariance': 0.1,
+        }],
+    )
+
     # Create launch description
     ld = LaunchDescription()
 
@@ -210,5 +240,7 @@ def generate_launch_description():
     ld.add_action(start_robot_state_publisher_cmd)
     ld.add_action(rviz_cmd)
     ld.add_action(ackermann_preprocessor)
+    ld.add_action(odom_covariance_injector)
+    ld.add_action(imu_covariance_injector)
 
     return ld

@@ -10,7 +10,10 @@ install(
 )
 
 install(
-  PROGRAMS scripts/ackermann_cmd_vel_preprocessor.py
+  PROGRAMS
+    scripts/ackermann_cmd_vel_preprocessor.py
+    scripts/odom_covariance_injector.py
+    scripts/imu_covariance_injector.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

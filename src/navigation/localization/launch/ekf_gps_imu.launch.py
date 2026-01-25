@@ -37,7 +37,7 @@ def generate_launch_description():
             ('imu/data', 'imu'),
             ('gps/fix', 'gps/fix'),
             ('gps/filtered', 'gps/filtered'),
-            ('odometry/gps', 'odometry/gps'),
+            ('odometry/gps', 'odometry/gps_raw'),  # Covariance injector will republish to odometry/gps
             ('odometry/filtered', 'odom'),
         ],
     )

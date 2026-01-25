@@ -9,6 +9,22 @@ ekf_filter_node_odom:
     debug: false
     publish_tf: true
 
+    # Reduce startup delay - don't block waiting for transforms
+    transform_timeout: 0.1
+    transform_time_offset: 0.0
+    predict_to_current_time: true
+
+    # Handle simulation time resets
+    reset_on_time_jump: true
+
+    # Initial state - allows EKF to start publishing TF immediately
+    # This breaks the circular dependency with navsat_transform
+    initial_state: [0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0]
+
     map_frame: map
     odom_frame: odom
     base_link_frame: base_footprint
@@ -67,3 +83,7 @@ navsat_transform:
     publish_filtered_gps: true
     use_odometry_yaw: false
     wait_for_datum: false
+
+    # Frame configuration - must match EKF frames
+    world_frame: odom
+    base_link_frame: base_footprint

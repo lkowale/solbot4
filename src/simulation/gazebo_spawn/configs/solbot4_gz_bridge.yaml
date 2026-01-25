@@ -22,8 +22,8 @@
 #   gz_type_name: "gz.msgs.Odometry"
 #   direction: GZ_TO_ROS
 
-# IMU
-- ros_topic_name: "imu"
+# IMU - publishes to imu_raw, covariance injector republishes to imu
+- ros_topic_name: "imu_raw"
   gz_topic_name: "/imu_gazebo"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "gz.msgs.IMU"

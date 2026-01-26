@@ -11,6 +11,7 @@ find_package(builtin_interfaces REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MoveSegment.msg"
+  "msg/Pause.msg"
   "action/Move.action"
   "action/MoveSequence.action"
   "action/RunMoveSequenceLoop.action"

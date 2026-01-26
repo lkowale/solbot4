@@ -44,10 +44,18 @@ ament_target_dependencies(move_sequence_action_bt_node ${dependencies})
 # Required for BT_REGISTER_NODES macro to export the symbol
 target_compile_definitions(move_sequence_action_bt_node PRIVATE BT_PLUGIN_EXPORT)
 
+# BT condition node plugin library for pause functionality
+add_library(pause_condition_bt_node SHARED
+  src/pause_condition.cpp
+)
+ament_target_dependencies(pause_condition_bt_node ${dependencies})
+target_compile_definitions(pause_condition_bt_node PRIVATE BT_PLUGIN_EXPORT)
+
 # Install libraries
 install(TARGETS
   move_seq_navigator
   move_sequence_action_bt_node
+  pause_condition_bt_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -67,7 +75,7 @@ install(DIRECTORY behavior_trees/
 pluginlib_export_plugin_description_file(nav2_core navigator_plugins.xml)
 
 ament_export_include_directories(include)
-ament_export_libraries(move_seq_navigator move_sequence_action_bt_node)
+ament_export_libraries(move_seq_navigator move_sequence_action_bt_node pause_condition_bt_node)
 ament_export_dependencies(${dependencies})
 
 ament_package()

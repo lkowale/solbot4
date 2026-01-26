@@ -6,9 +6,12 @@
 
 #include <string>
 #include <memory>
+#include <chrono>
+#include <atomic>
 
 #include "nav2_behavior_tree/bt_action_node.hpp"
 #include "solbot4_msgs/action/move_sequence.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 namespace move_seq_nav
 {
@@ -29,15 +32,29 @@ public:
 
   BT::NodeStatus on_cancelled() override;
 
+  void halt() override;
+
   static BT::PortsList providedPorts()
   {
     return providedBasicPorts({
       BT::InputPort<std::string>("sequence_file", "long_sequence.json", "Path to sequence file"),
       BT::InputPort<uint16_t>("segment_idx", 0, "Starting segment index"),
       BT::InputPort<float>("segment_distance_traveled", 0.0f, "Distance already traveled in segment"),
+      BT::InputPort<std::string>("progress_file", "/tmp/move_sequence_progress.json", "File to save progress"),
       BT::OutputPort<uint16_t>("error_code", "Error code from action result"),
     });
   }
+
+private:
+  void saveProgress();
+  void feedbackCallback(
+    typename rclcpp_action::ClientGoalHandle<solbot4_msgs::action::MoveSequence>::SharedPtr,
+    const std::shared_ptr<const solbot4_msgs::action::MoveSequence::Feedback> feedback);
+
+  std::string sequence_file_;
+  std::string progress_file_;
+  std::atomic<uint16_t> last_segment_idx_{0};
+  std::atomic<float> last_distance_traveled_{0.0f};
 };
 
 }  // namespace move_seq_nav

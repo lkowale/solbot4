@@ -1,0 +1,25 @@
+<!--
+  Pausable MoveSequence Loop Behavior Tree
+
+  Executes move sequences in an infinite loop with pause/resume support.
+  Subscribe to /pause topic with solbot4_msgs/msg/Pause to pause/resume.
+
+  To pause:  ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: true, source: 'operator', reason: 'Manual pause'}"
+  To resume: ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: false, source: 'operator', reason: 'Resuming'}"
+-->
+<root BTCPP_format="4" main_tree_to_execute="MoveSeqPausableLoop">
+  <BehaviorTree ID="MoveSeqPausableLoop">
+    <ReactiveSequence>
+      <!-- Check pause state - if paused, this fails and stops the sequence -->
+      <NotPaused pause_topic="/pause"/>
+
+      <!-- Execute the move sequence -->
+      <MoveSequence
+        sequence_file="{sequence_file}"
+        segment_idx="0"
+        segment_distance_traveled="0.0"
+        progress_file="/tmp/move_sequence_progress.json"
+        error_code="{error_code}"/>
+    </ReactiveSequence>
+  </BehaviorTree>
+</root>

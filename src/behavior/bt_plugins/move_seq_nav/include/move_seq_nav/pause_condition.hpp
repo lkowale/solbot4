@@ -1,0 +1,53 @@
+// Copyright (c) 2024
+// Licensed under the Apache License, Version 2.0
+
+#ifndef MOVE_SEQ_NAV__PAUSE_CONDITION_HPP_
+#define MOVE_SEQ_NAV__PAUSE_CONDITION_HPP_
+
+#include <string>
+#include <memory>
+#include <atomic>
+
+#include "behaviortree_cpp/condition_node.h"
+#include "rclcpp/rclcpp.hpp"
+#include "solbot4_msgs/msg/pause.hpp"
+
+namespace move_seq_nav
+{
+
+/**
+ * @brief A BT condition node that monitors a pause topic.
+ * Returns SUCCESS when not paused (execution should continue).
+ * Returns FAILURE when paused (execution should stop).
+ */
+class PauseCondition : public BT::ConditionNode
+{
+public:
+  PauseCondition(
+    const std::string & condition_name,
+    const BT::NodeConfiguration & conf);
+
+  ~PauseCondition() override = default;
+
+  BT::NodeStatus tick() override;
+
+  static BT::PortsList providedPorts()
+  {
+    return {
+      BT::InputPort<std::string>("pause_topic", "/pause", "Topic to subscribe for pause commands"),
+    };
+  }
+
+private:
+  void pauseCallback(const solbot4_msgs::msg::Pause::SharedPtr msg);
+
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Subscription<solbot4_msgs::msg::Pause>::SharedPtr pause_sub_;
+  std::atomic<bool> is_paused_{false};
+  std::string pause_source_;
+  std::string pause_reason_;
+};
+
+}  // namespace move_seq_nav
+
+#endif  // MOVE_SEQ_NAV__PAUSE_CONDITION_HPP_

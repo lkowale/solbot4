@@ -1,5 +1,5 @@
-# Nav2 parameters for solbot4 - MoveSequence Loop configuration
-# Includes move_seq_nav BehaviorTree Navigator for infinite sequence execution
+# Nav2 parameters for solbot4 - MoveSequence Pausable configuration
+# Includes move_seq_nav BehaviorTree Navigator with pause/resume support
 # Configured for Ackermann steering robot
 
 bt_navigator:
@@ -19,7 +19,7 @@ bt_navigator:
       plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
     run_move_sequence_loop:
       plugin: "move_seq_nav/MoveSeqNavigator"
-      default_bt_xml_filename: "/home/aa/ros2_ws4/src/behavior/bt_plugins/move_seq_nav/behavior_trees/move_seq_loop.xml"
+      default_bt_xml_filename: "/home/aa/ros2_ws4/src/behavior/bt_plugins/move_seq_nav/behavior_trees/move_seq_pausable.xml"
       sequence_file_blackboard_id: "sequence_file"
     # Register BT node plugins
     plugin_lib_names:

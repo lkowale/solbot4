@@ -11,7 +11,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -101,19 +101,24 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
-    # Nav2 navigation stack
-    navigation_cmd = GroupAction(
+    # Nav2 navigation stack (delayed to allow Gazebo and EKF to initialize TF tree)
+    navigation_cmd = TimerAction(
+        period=5.0,  # Wait 5 seconds for Gazebo clock and EKF to start publishing TF
         actions=[
-            SetRemap(src='/cmd_vel', dst='/cmd_vel_nav2'),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(nav2_bringup_dir, 'launch', 'navigation.launch.py')),
-                launch_arguments={
-                    'use_sim_time': use_sim_time,
-                    'params_file': params_file,
-                    'autostart': autostart,
-                    'use_composition': use_composition,
-                }.items()
+            GroupAction(
+                actions=[
+                    SetRemap(src='/cmd_vel', dst='/cmd_vel_nav2'),
+                    IncludeLaunchDescription(
+                        PythonLaunchDescriptionSource(
+                            os.path.join(nav2_bringup_dir, 'launch', 'navigation.launch.py')),
+                        launch_arguments={
+                            'use_sim_time': use_sim_time,
+                            'params_file': params_file,
+                            'autostart': autostart,
+                            'use_composition': use_composition,
+                        }.items()
+                    )
+                ]
             )
         ]
     )

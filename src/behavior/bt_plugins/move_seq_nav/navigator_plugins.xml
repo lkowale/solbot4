@@ -1,0 +1,10 @@
+<class_libraries>
+  <library path="move_seq_navigator">
+    <class
+      name="move_seq_nav/MoveSeqNavigator"
+      type="move_seq_nav::MoveSeqNavigator"
+      base_class_type="nav2_core::NavigatorBase">
+      <description>Move Sequence Loop Navigator</description>
+    </class>
+  </library>
+</class_libraries>

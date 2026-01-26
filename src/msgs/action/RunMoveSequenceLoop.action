@@ -1,0 +1,13 @@
+# Goal - trigger to start the infinite move sequence loop
+string sequence_file
+---
+# Result - only returned if stopped or error
+uint16 error_code
+uint16 NONE=0
+uint16 CANCELLED=1
+uint16 FAILED=2
+---
+# Feedback
+uint32 loop_count
+uint16 current_segment
+float32 distance_traveled

@@ -13,6 +13,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MoveSegment.msg"
   "action/Move.action"
   "action/MoveSequence.action"
+  "action/RunMoveSequenceLoop.action"
   DEPENDENCIES builtin_interfaces
 )
 

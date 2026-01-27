@@ -7,7 +7,6 @@
 #include <string>
 #include <memory>
 #include <chrono>
-#include <atomic>
 
 #include "nav2_behavior_tree/bt_action_node.hpp"
 #include "solbot4_msgs/action/move_sequence.hpp"
@@ -32,6 +31,9 @@ public:
 
   BT::NodeStatus on_cancelled() override;
 
+  void on_wait_for_result(
+    std::shared_ptr<const solbot4_msgs::action::MoveSequence::Feedback> feedback) override;
+
   void halt() override;
 
   static BT::PortsList providedPorts()
@@ -47,14 +49,11 @@ public:
 
 private:
   void saveProgress();
-  void feedbackCallback(
-    typename rclcpp_action::ClientGoalHandle<solbot4_msgs::action::MoveSequence>::SharedPtr,
-    const std::shared_ptr<const solbot4_msgs::action::MoveSequence::Feedback> feedback);
 
   std::string sequence_file_;
   std::string progress_file_;
-  std::atomic<uint16_t> last_segment_idx_{0};
-  std::atomic<float> last_distance_traveled_{0.0f};
+  uint16_t last_segment_idx_{0};
+  float last_distance_traveled_{0.0f};
 };
 
 }  // namespace move_seq_nav

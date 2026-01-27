@@ -61,13 +61,13 @@ void MoveSequenceAction::halt()
   BtActionNode::halt();
 }
 
-void MoveSequenceAction::feedbackCallback(
-  typename rclcpp_action::ClientGoalHandle<solbot4_msgs::action::MoveSequence>::SharedPtr,
-  const std::shared_ptr<const solbot4_msgs::action::MoveSequence::Feedback> feedback)
+void MoveSequenceAction::on_wait_for_result(
+  std::shared_ptr<const solbot4_msgs::action::MoveSequence::Feedback> feedback)
 {
-  // Store latest progress from feedback
-  last_segment_idx_ = feedback->current_segment;
-  last_distance_traveled_ = feedback->distance_traveled;
+  if (feedback) {
+    last_segment_idx_ = feedback->current_segment;
+    last_distance_traveled_ = feedback->distance_traveled;
+  }
 }
 
 void MoveSequenceAction::saveProgress()
@@ -76,8 +76,8 @@ void MoveSequenceAction::saveProgress()
   if (file.is_open()) {
     file << "{\n";
     file << "  \"sequence_file\": \"" << sequence_file_ << "\",\n";
-    file << "  \"segment_idx\": " << last_segment_idx_.load() << ",\n";
-    file << "  \"distance_traveled\": " << last_distance_traveled_.load() << "\n";
+    file << "  \"segment_idx\": " << last_segment_idx_ << ",\n";
+    file << "  \"distance_traveled\": " << last_distance_traveled_ << "\n";
     file << "}\n";
     file.close();
   }

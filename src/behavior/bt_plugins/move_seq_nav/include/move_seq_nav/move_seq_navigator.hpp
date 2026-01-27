@@ -46,6 +46,9 @@ protected:
   void initializeGoal(ActionT::Goal::ConstSharedPtr goal);
 
   std::string sequence_file_blackboard_id_;
+  std::string field_name_blackboard_id_;
+  std::string progress_file_blackboard_id_;
+  std::string fields_directory_;
   uint32_t loop_count_;
   rclcpp::Time start_time_;
 };

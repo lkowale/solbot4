@@ -21,6 +21,9 @@ bt_navigator:
       plugin: "move_seq_nav/MoveSeqNavigator"
       default_bt_xml_filename: "/home/aa/ros2_ws4/src/behavior/bt_plugins/move_seq_nav/behavior_trees/move_seq_pausable.xml"
       sequence_file_blackboard_id: "sequence_file"
+      field_name_blackboard_id: "field_name"
+      progress_file_blackboard_id: "progress_file"
+      fields_directory: "/home/aa/ros2_ws4/src/fields"
     # Register BT node plugins
     plugin_lib_names:
       - move_sequence_action_bt_node

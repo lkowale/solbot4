@@ -1,5 +1,6 @@
 # Goal - trigger to start the infinite move sequence loop
 string sequence_file
+string field_name
 ---
 # Result - only returned if stopped or error
 uint16 error_code

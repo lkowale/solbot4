@@ -18,7 +18,7 @@
         sequence_file="{sequence_file}"
         segment_idx="0"
         segment_distance_traveled="0.0"
-        progress_file="/tmp/move_sequence_progress.json"
+        progress_file="{progress_file}"
         error_code="{error_code}"/>
     </ReactiveSequence>
   </BehaviorTree>

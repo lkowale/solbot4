@@ -23,10 +23,28 @@ bool MoveSeqNavigator::configure(
   nav2_util::declare_parameter_if_not_declared(
     node, getName() + ".sequence_file_blackboard_id",
     rclcpp::ParameterValue("sequence_file"));
+  nav2_util::declare_parameter_if_not_declared(
+    node, getName() + ".field_name_blackboard_id",
+    rclcpp::ParameterValue("field_name"));
+  nav2_util::declare_parameter_if_not_declared(
+    node, getName() + ".progress_file_blackboard_id",
+    rclcpp::ParameterValue("progress_file"));
+  nav2_util::declare_parameter_if_not_declared(
+    node, getName() + ".fields_directory",
+    rclcpp::ParameterValue("/home/aa/ros2_ws4/src/fields"));
 
   node->get_parameter(
     getName() + ".sequence_file_blackboard_id",
     sequence_file_blackboard_id_);
+  node->get_parameter(
+    getName() + ".field_name_blackboard_id",
+    field_name_blackboard_id_);
+  node->get_parameter(
+    getName() + ".progress_file_blackboard_id",
+    progress_file_blackboard_id_);
+  node->get_parameter(
+    getName() + ".fields_directory",
+    fields_directory_);
 
   return true;
 }
@@ -75,13 +93,18 @@ void MoveSeqNavigator::initializeGoal(ActionT::Goal::ConstSharedPtr goal)
   loop_count_ = 0;
   start_time_ = clock_->now();
 
-  // Set sequence file on blackboard for BT nodes to use
+  // Set sequence file and field name on blackboard for BT nodes to use
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set(sequence_file_blackboard_id_, goal->sequence_file);
+  blackboard->set(field_name_blackboard_id_, goal->field_name);
+
+  // Construct progress file path: /fields_directory/field_name/progress.json
+  std::string progress_file = fields_directory_ + "/" + goal->field_name + "/progress.json";
+  blackboard->set(progress_file_blackboard_id_, progress_file);
 
   RCLCPP_INFO(
-    logger_, "Starting MoveSequence loop with sequence file: %s",
-    goal->sequence_file.c_str());
+    logger_, "Starting MoveSequence loop with sequence file: %s, field: %s, progress: %s",
+    goal->sequence_file.c_str(), goal->field_name.c_str(), progress_file.c_str());
 }
 
 void MoveSeqNavigator::onLoop()

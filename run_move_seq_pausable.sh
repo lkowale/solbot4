@@ -3,7 +3,7 @@
 # Supports pause/resume via /pause topic
 #
 # After launch, execute:
-#   ros2 action send_goal /run_move_sequence_loop solbot4_msgs/action/RunMoveSequenceLoop "{sequence_file: 'long_sequence.json'}"
+#   ros2 action send_goal /run_move_sequence_loop solbot4_msgs/action/RunMoveSequenceLoop "{sequence_file: 'long_sequence.json', field_name: 'yard_one_line'}"
 #
 # To pause:
 #   ros2 topic pub --once /pause solbot4_msgs/msg/Pause "{paused: true, source: 'operator', reason: 'Manual pause'}"
@@ -12,6 +12,9 @@
 #   ros2 topic pub --once /pause solbot4_msgs/msg/Pause "{paused: false, source: 'operator', reason: 'Resuming'}"
 
 set -e
+
+# Use CycloneDDS for more reliable action server communication
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 # Kill any existing ROS2 and Gazebo processes
 echo "Cleaning up existing processes..."
@@ -48,7 +51,9 @@ echo "  - /move_sequence (solbot4_msgs/action/MoveSequence)"
 echo "  - /move (solbot4_msgs/action/Move)"
 echo ""
 echo "To start sequence:"
-echo "  ros2 action send_goal /run_move_sequence_loop solbot4_msgs/action/RunMoveSequenceLoop \"{sequence_file: 'long_sequence.json'}\""
+echo "  ros2 action send_goal /run_move_sequence_loop solbot4_msgs/action/RunMoveSequenceLoop \"{sequence_file: 'long_sequence.json', field_name: 'yard_one_line'}\""
+echo ""
+echo "Progress file will be saved to: /home/aa/ros2_ws4/src/fields/<field_name>/progress.json"
 echo ""
 echo "To pause:"
 echo "  ros2 topic pub --once /pause solbot4_msgs/msg/Pause \"{paused: true, source: 'operator', reason: 'Manual pause'}\""

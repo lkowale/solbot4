@@ -183,7 +183,6 @@ def generate_launch_description():
         name='ackermann_cmd_vel_preprocessor',
         namespace=namespace,
         output='screen',
-        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     # GPS odometry covariance injector - adds covariance to navsat_transform output
@@ -195,9 +194,8 @@ def generate_launch_description():
         namespace=namespace,
         output='screen',
         parameters=[{
-            'use_sim_time': use_sim_time,
-            'pose_covariance_x': 0.01,
-            'pose_covariance_y': 0.01,
+            'pose_covariance_x': 0.0004,
+            'pose_covariance_y': 0.0004,
         }],
     )
 
@@ -209,7 +207,6 @@ def generate_launch_description():
         namespace=namespace,
         output='screen',
         parameters=[{
-            'use_sim_time': use_sim_time,
             'orientation_covariance': 0.01,
             'angular_velocity_covariance': 0.01,
             'linear_acceleration_covariance': 0.1,

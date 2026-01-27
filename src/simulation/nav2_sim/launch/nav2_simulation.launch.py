@@ -103,7 +103,7 @@ def generate_launch_description():
 
     # Nav2 navigation stack (delayed to allow Gazebo and EKF to initialize TF tree)
     navigation_cmd = TimerAction(
-        period=5.0,  # Wait 5 seconds for Gazebo clock and EKF to start publishing TF
+        period=2.0,  # Wait 2 seconds for Gazebo clock and EKF to start publishing TF
         actions=[
             GroupAction(
                 actions=[
@@ -123,15 +123,20 @@ def generate_launch_description():
         ]
     )
 
-    # Mapviz visualization
+    # Mapviz visualization (delayed to allow TF tree to be established)
     mapviz_config_file = os.path.join(nav2_bringup_dir, 'config', 'mapviz.mvc')
-    mapviz_cmd = Node(
-        condition=IfCondition(use_mapviz),
-        package='mapviz',
-        executable='mapviz',
-        name='mapviz',
-        parameters=[{'use_sim_time': use_sim_time}],
-        arguments=['-c', mapviz_config_file],
+    mapviz_cmd = TimerAction(
+        period=5.0,  # Wait for Gazebo + EKF to publish TF (base_footprint frame)
+        actions=[
+            Node(
+                condition=IfCondition(use_mapviz),
+                package='mapviz',
+                executable='mapviz',
+                name='mapviz',
+                parameters=[{'use_sim_time': use_sim_time}],
+                arguments=['-c', mapviz_config_file],
+            )
+        ]
     )
 
     # Origin publisher for Mapviz WGS84 transform
@@ -141,7 +146,6 @@ def generate_launch_description():
         executable='origin_publisher.py',
         name='origin_publisher',
         output='screen',
-        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     # Static transform from map to origin frame (for swri_transform_util)

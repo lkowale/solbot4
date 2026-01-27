@@ -57,11 +57,31 @@ displays:
   - type: mapviz_plugins/odometry
     name: new display
     config:
-      visible: false
+      visible: true
+      collapsed: false
+      topic: /odom
+      color: "#f66151"
+      draw_style: arrows
+      position_tolerance: 0
+      buffer_size: 2000
+      show_laps: false
+      show_covariance: false
+      show_all_covariances: false
+      static_arrow_sizes: false
+      arrow_size: 25
+      show_timestamps: 0
+      qos_depth: 10
+      qos_history: 1
+      qos_reliability: 1
+      qos_durability: 2
+  - type: mapviz_plugins/odometry
+    name: new display
+    config:
+      visible: true
       collapsed: false
       topic: /odometry/gps
       color: "#9141ac"
-      draw_style: arrows
+      draw_style: points
       position_tolerance: 0
       buffer_size: 2000
       show_laps: false

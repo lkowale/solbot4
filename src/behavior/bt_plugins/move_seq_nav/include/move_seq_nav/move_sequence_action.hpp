@@ -42,7 +42,7 @@ public:
       BT::InputPort<std::string>("sequence_file", "long_sequence.json", "Path to sequence file"),
       BT::InputPort<uint16_t>("segment_idx", 0, "Starting segment index"),
       BT::InputPort<float>("segment_distance_traveled", 0.0f, "Distance already traveled in segment"),
-      BT::InputPort<std::string>("progress_file", "/tmp/move_sequence_progress.json", "File to save progress"),
+      BT::InputPort<std::string>("progress_file", "/tmp/move_seq_progress.json", "File to save progress"),
       BT::OutputPort<uint16_t>("error_code", "Error code from action result"),
     });
   }

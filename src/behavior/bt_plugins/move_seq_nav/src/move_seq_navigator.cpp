@@ -98,8 +98,8 @@ void MoveSeqNavigator::initializeGoal(ActionT::Goal::ConstSharedPtr goal)
   blackboard->set(sequence_file_blackboard_id_, goal->sequence_file);
   blackboard->set(field_name_blackboard_id_, goal->field_name);
 
-  // Construct progress file path: /fields_directory/field_name/progress.json
-  std::string progress_file = fields_directory_ + "/" + goal->field_name + "/progress.json";
+  // Construct progress file path: /fields_directory/field_name/move_seq_progress.json
+  std::string progress_file = fields_directory_ + "/" + goal->field_name + "/move_seq_progress.json";
   blackboard->set(progress_file_blackboard_id_, progress_file);
 
   RCLCPP_INFO(

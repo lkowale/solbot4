@@ -4,6 +4,8 @@
 #include <string>
 #include <memory>
 #include <fstream>
+#include <sstream>
+#include <filesystem>
 
 #include "move_seq_nav/move_sequence_action.hpp"
 
@@ -25,6 +27,14 @@ void MoveSequenceAction::on_tick()
   getInput("segment_distance_traveled", goal_.segment_distance_traveled);
   getInput("progress_file", progress_file_);
 
+  action_completed_ = false;
+
+  // If a progress file exists, resume from saved position
+  if (loadProgress()) {
+    goal_.segment_idx = last_segment_idx_;
+    goal_.segment_distance_traveled = last_distance_traveled_;
+  }
+
   sequence_file_ = goal_.sequence_file;
   last_segment_idx_ = goal_.segment_idx;
   last_distance_traveled_ = goal_.segment_distance_traveled;
@@ -33,6 +43,7 @@ void MoveSequenceAction::on_tick()
 BT::NodeStatus MoveSequenceAction::on_success()
 {
   setOutput("error_code", result_.result->error_code);
+  action_completed_ = true;
   // Clear progress file on successful completion
   std::remove(progress_file_.c_str());
   return BT::NodeStatus::SUCCESS;
@@ -41,6 +52,7 @@ BT::NodeStatus MoveSequenceAction::on_success()
 BT::NodeStatus MoveSequenceAction::on_aborted()
 {
   setOutput("error_code", result_.result->error_code);
+  action_completed_ = true;
   // Save progress on abort so we can resume later
   saveProgress();
   return BT::NodeStatus::FAILURE;
@@ -56,8 +68,11 @@ BT::NodeStatus MoveSequenceAction::on_cancelled()
 
 void MoveSequenceAction::halt()
 {
-  // Save progress when halted
-  saveProgress();
+  // Only save progress if the action didn't already complete
+  // (halt is also called during tree cleanup after success/abort)
+  if (!action_completed_) {
+    saveProgress();
+  }
   BtActionNode::halt();
 }
 
@@ -81,6 +96,45 @@ void MoveSequenceAction::saveProgress()
     file << "}\n";
     file.close();
   }
+}
+
+bool MoveSequenceAction::loadProgress()
+{
+  if (!std::filesystem::exists(progress_file_)) {
+    return false;
+  }
+
+  std::ifstream file(progress_file_);
+  if (!file.is_open()) {
+    return false;
+  }
+
+  std::stringstream buffer;
+  buffer << file.rdbuf();
+  std::string content = buffer.str();
+
+  // Parse segment_idx
+  auto idx_pos = content.find("\"segment_idx\":");
+  if (idx_pos == std::string::npos) {
+    return false;
+  }
+  idx_pos = content.find(':', idx_pos) + 1;
+  last_segment_idx_ = static_cast<uint16_t>(std::stoi(content.substr(idx_pos)));
+
+  // Parse distance_traveled
+  auto dist_pos = content.find("\"distance_traveled\":");
+  if (dist_pos == std::string::npos) {
+    return false;
+  }
+  dist_pos = content.find(':', dist_pos) + 1;
+  last_distance_traveled_ = std::stof(content.substr(dist_pos));
+
+  auto node = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
+  RCLCPP_INFO(node->get_logger(),
+    "Loaded progress: segment_idx=%u, distance_traveled=%.2f",
+    last_segment_idx_, last_distance_traveled_);
+
+  return true;
 }
 
 }  // namespace move_seq_nav

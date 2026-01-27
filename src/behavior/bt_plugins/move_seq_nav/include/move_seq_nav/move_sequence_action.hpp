@@ -49,11 +49,13 @@ public:
 
 private:
   void saveProgress();
+  bool loadProgress();
 
   std::string sequence_file_;
   std::string progress_file_;
   uint16_t last_segment_idx_{0};
   float last_distance_traveled_{0.0f};
+  bool action_completed_{false};
 };
 
 }  // namespace move_seq_nav

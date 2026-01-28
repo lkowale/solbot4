@@ -1,0 +1,16 @@
+# Goal - run along a single line defined by WGS84 start/end points
+# Either provide start_point/end_point directly, or provide field_name to load from file
+geographic_msgs/GeoPoint start_point
+geographic_msgs/GeoPoint end_point
+string field_name  # If set, load coordinates from {fields_directory}/{field_name}/line.json
+string behavior_tree
+---
+# Result - only returned if stopped or error
+uint16 error_code
+uint16 NONE=0
+uint16 CANCELLED=1
+uint16 FAILED=2
+---
+# Feedback
+float32 distance_traveled
+float32 total_distance

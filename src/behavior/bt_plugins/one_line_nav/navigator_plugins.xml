@@ -1,0 +1,10 @@
+<class_libraries>
+  <library path="one_line_navigator">
+    <class
+      name="one_line_nav/OneLineNavigator"
+      type="one_line_nav::OneLineNavigator"
+      base_class_type="nav2_core::NavigatorBase">
+      <description>One Line Navigator for WGS84 start/end point navigation</description>
+    </class>
+  </library>
+</class_libraries>

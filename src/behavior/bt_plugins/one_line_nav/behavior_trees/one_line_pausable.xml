@@ -1,0 +1,78 @@
+<!--
+  Pausable OneLine Behavior Tree
+
+  Navigates along a single line defined by WGS84 start/end points with pause/resume support.
+  Subscribe to /pause topic with solbot4_msgs/msg/Pause to pause/resume.
+
+  To pause:  ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: true, source: 'operator', reason: 'Manual pause'}"
+  To resume: ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: false, source: 'operator', reason: 'Resuming'}"
+
+  Blackboard variables:
+    Input (set by navigator):
+      - geo_points: vector of GeoPoint (start, end)
+
+    Output (set by ConvertGeoPoints):
+      - map_points: vector of PoseStamped in map frame
+-->
+<root BTCPP_format="4" main_tree_to_execute="OneLinePausable">
+  <BehaviorTree ID="OneLinePausable">
+    <Sequence>
+      <!-- Convert WGS84 coordinates to map frame using robot_localization/fromLL -->
+      <ConvertGeoPoints geo_points="{geo_points}" map_points="{map_points}"/>
+      <GetPoseFromPoses poses="{map_points}" pose="{start_pose}" index="0" />
+      <ComputePathThroughPoses goals="{map_points}" path="{path}" start="{start_pose}" planner_id="StraightLine" error_code_id="{compute_path_error_code}"/>
+      <Script code=" current_component:='to_path_start' " />
+
+      <ReactiveSequence>
+        <!-- Check pause state - if paused, WaitUntilNotPaused keeps tree RUNNING -->
+        <Fallback>
+          <NotPaused pause_topic="/pause"/>
+          <WaitUntilNotPaused pause_topic="/pause"/>
+        </Fallback>
+
+        <ReactiveFallback name="Traverse iter_path">
+          <Precondition if="current_component=='to_path_start'" else="FAILURE">
+            <Sequence name="Traverse to_path_start">
+              <GetPoseFromPath path="{path}" pose="{start_pose}" index="0" />
+              <ComputePathToPose goal="{start_pose}" path="{path_to_start}" planner_id="GridBased" error_code_id="{compute_path_error_code}"/>
+              <PublishPath topic_name="/to_start_path" path="{path_to_start}"/>
+              <FollowPath path="{path_to_start}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/> 
+              <Script code=" current_component:='swath' " />    
+            </Sequence>
+          </Precondition>
+          <Precondition if="current_component=='swath'" else="FAILURE">
+            <Sequence name="Traverse swath">
+              <PublishPath topic_name="/line_path" path="{path}"/>
+              <!-- <JobManager task_type="tool_down"/>
+              <Wait name="WaitRecovery" wait_duration="1.0" />
+              <JobManager task_type="start_planter"/> -->
+              <FollowPath path="{path}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/>
+              <Script code=" current_component:='turn' " />
+            </Sequence>
+          </Precondition>
+          <Precondition if="current_component=='turn'" else="FAILURE">
+            <Sequence name="Traverse turn">
+              <!-- <JobManager task_type="stop_planter"/>
+              <JobManager task_type="tool_up"/>
+              <Wait name="WaitRecovery" wait_duration="1.0" /> -->
+              <MoveSequence sequence_file="same_line_turn_fast.json" segment_idx="{segment_idx}" segment_distance_traveled="{seg_trav}"
+                              current_segment_idx="{segment_idx}" current_segment_distance="{seg_trav}"/>   
+              <!-- <Precondition if="resumed_on_swath==true" else="SUCCESS">
+                <Script code=" path:=uncut_path; resumed_on_swath:=false  "/>
+              </Precondition> -->
+              <ReversePath input_path="{path}" output_path="{path}"/>           
+              <Script code=" current_component:='to_path_start' " /> 
+            </Sequence>
+          </Precondition>
+          <Precondition if="current_component=='null'" else="FAILURE">
+            <Sequence name="End job">
+              <!-- <JobManager task_type="end_job"/> -->
+              <!--Script code=" field_completed=true " /-->
+            </Sequence>
+          </Precondition>
+        </ReactiveFallback>
+
+      </ReactiveSequence>
+    </Sequence>
+  </BehaviorTree>
+</root>

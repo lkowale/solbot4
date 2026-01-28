@@ -1,8 +1,8 @@
 // Copyright (c) 2024
 // Licensed under the Apache License, Version 2.0
 
-#ifndef MOVE_SEQ_NAV__PAUSE_CONDITION_HPP_
-#define MOVE_SEQ_NAV__PAUSE_CONDITION_HPP_
+#ifndef PAUSE_BT_NODES__PAUSE_CONDITION_HPP_
+#define PAUSE_BT_NODES__PAUSE_CONDITION_HPP_
 
 #include <string>
 #include <memory>
@@ -13,7 +13,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "solbot4_msgs/msg/pause.hpp"
 
-namespace move_seq_nav
+namespace pause_bt_nodes
 {
 
 /**
@@ -82,6 +82,6 @@ private:
   std::atomic<bool> is_paused_{false};
 };
 
-}  // namespace move_seq_nav
+}  // namespace pause_bt_nodes
 
-#endif  // MOVE_SEQ_NAV__PAUSE_CONDITION_HPP_
+#endif  // PAUSE_BT_NODES__PAUSE_CONDITION_HPP_

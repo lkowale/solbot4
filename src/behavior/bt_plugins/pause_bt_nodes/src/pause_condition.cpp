@@ -4,9 +4,9 @@
 #include <string>
 #include <memory>
 
-#include "move_seq_nav/pause_condition.hpp"
+#include "pause_bt_nodes/pause_condition.hpp"
 
-namespace move_seq_nav
+namespace pause_bt_nodes
 {
 
 PauseCondition::PauseCondition(
@@ -132,11 +132,11 @@ void WaitUntilNotPaused::onHalted()
   RCLCPP_DEBUG(node_->get_logger(), "WaitUntilNotPaused halted");
 }
 
-}  // namespace move_seq_nav
+}  // namespace pause_bt_nodes
 
 #include "behaviortree_cpp/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<move_seq_nav::PauseCondition>("NotPaused");
-  factory.registerNodeType<move_seq_nav::WaitUntilNotPaused>("WaitUntilNotPaused");
+  factory.registerNodeType<pause_bt_nodes::PauseCondition>("NotPaused");
+  factory.registerNodeType<pause_bt_nodes::WaitUntilNotPaused>("WaitUntilNotPaused");
 }

@@ -54,8 +54,7 @@ ekf_filter_node_odom:
     imu0_remove_gravitational_acceleration: true
 
     use_control: false
-
-    # Process noise covariance (15x15 matrix)
+    
     # Process noise covariance (15x15 matrix)
     # States: [x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az]
     # Low velocity noise (0.05) keeps velocity estimate stable between RTK GPS updates

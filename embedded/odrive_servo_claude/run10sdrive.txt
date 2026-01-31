@@ -1,0 +1,36 @@
+import time
+
+print("Oczekiwanie 3 sekundy...")
+time.sleep(3)
+
+print("Start - prędkość 2 obr/s przez 10 sekund")
+odrv0.axis0.requested_state = 8  # CLOSED_LOOP_CONTROL
+odrv0.axis0.controller.input_vel = 2
+
+# Obracaj przez 10 sekund z monitoringiem
+start_time = time.time()
+while time.time() - start_time < 10:
+    vel = odrv0.axis0.encoder.vel_estimate
+    current = odrv0.axis0.motor.current_control.Iq_measured
+    vbus = odrv0.vbus_voltage
+    
+    # Próba odczytu prądu z zasilacza (jeśli dostępne)
+    try:
+        ibus = odrv0.ibus
+        power_supply = vbus * ibus
+    except:
+        # Jeśli ibus nie jest dostępne, szacuj na podstawie Iq
+        # Przybliżona sprawność 90%, 3 fazy
+        ibus_estimated = (current * 10) / vbus * 0.5  # Szacunkowe
+        power_supply = vbus * ibus_estimated
+        ibus = ibus_estimated
+    
+    elapsed = time.time() - start_time
+    print(f"[{elapsed:5.1f}s] Vel: {vel:5.2f} obr/s | Iq: {current:5.2f}A | Vbus: {vbus:5.2f}V | Ibus: {ibus:5.2f}A | Moc: {power_supply:6.1f}W")
+    time.sleep(0.5)
+
+print("Stop")
+odrv0.axis0.controller.input_vel = 0
+odrv0.axis0.requested_state = 1  # IDLE
+
+print("Zakończono")

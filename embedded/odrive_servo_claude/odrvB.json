@@ -1,0 +1,171 @@
+{
+  "axis0": {
+    "anticogging": {
+      "anticogging_enabled": true,
+      "calib_anticogging": false,
+      "pre_calibrated": false
+    },
+    "axis_config": {
+      "enable_watchdog": false,
+      "startup_closed_loop_control": false,
+      "startup_encoder_offset_calibration": false,
+      "startup_motor_calibration": false
+    },
+    "controller": {
+      "control_mode": 2,
+      "enable_overspeed_error": true,
+      "enable_torque_mode_vel_limit": null,
+      "enable_vel_limit": true,
+      "input_filter_bandwidth": 2.0,
+      "input_mode": 1,
+      "pos_gain": 20.0,
+      "torque_ramp_rate": 0.009999999776482582,
+      "vel_gain": 0.5,
+      "vel_integrator_gain": 2.0,
+      "vel_integrator_limit": null,
+      "vel_limit": 10.0,
+      "vel_ramp_rate": 30.0
+    },
+    "current_control": {
+      "bandwidth": 20.0,
+      "i_gain": 4.137491703033447,
+      "p_gain": 0.007080446928739548
+    },
+    "encoder": {
+      "bandwidth": 100.0,
+      "cpr": 90,
+      "direction": null,
+      "enable_phase_interpolation": true,
+      "is_ready": null,
+      "mode": 1,
+      "phase_offset": null,
+      "phase_offset_float": null,
+      "pre_calibrated": true
+    },
+    "encoder_live": {
+      "pos_estimate": 0.0,
+      "shadow_count": 0
+    },
+    "errors": {
+      "axis": 256,
+      "controller": 0,
+      "encoder": 16,
+      "motor": 0
+    },
+    "motor": {
+      "acim_autoflux_min_Id": 10.0,
+      "acim_gain_min_flux": 10.0,
+      "calibration_current": 5.0,
+      "current_lim": 20.0,
+      "current_lim_margin": 2.0,
+      "inverter_temp_limit_lower": 100.0,
+      "inverter_temp_limit_upper": 120.0,
+      "motor_type": 0,
+      "phase_inductance": 0.0003540223406162113,
+      "phase_resistance": 0.20687457919120789,
+      "pole_pairs": 15,
+      "pre_calibrated": true,
+      "requested_current_range": 60.0,
+      "resistance_calib_max_voltage": 4.0,
+      "torque_constant": 0.03999999910593033,
+      "torque_lim": Infinity
+    },
+    "requested_state": 0,
+    "sensorless": {
+      "observer_gain": 1000.0,
+      "pm_flux_linkage": 0.0015800000401213765
+    },
+    "state": 1
+  },
+  "axis1": {
+    "anticogging": {
+      "anticogging_enabled": true,
+      "calib_anticogging": false,
+      "pre_calibrated": false
+    },
+    "axis_config": {
+      "enable_watchdog": false,
+      "startup_closed_loop_control": false,
+      "startup_encoder_offset_calibration": false,
+      "startup_motor_calibration": false
+    },
+    "controller": {
+      "control_mode": 3,
+      "enable_overspeed_error": true,
+      "enable_torque_mode_vel_limit": null,
+      "enable_vel_limit": true,
+      "input_filter_bandwidth": 2.0,
+      "input_mode": 1,
+      "pos_gain": 20.0,
+      "torque_ramp_rate": 0.009999999776482582,
+      "vel_gain": 0.1666666716337204,
+      "vel_integrator_gain": 0.3333333432674408,
+      "vel_integrator_limit": null,
+      "vel_limit": 2.0,
+      "vel_ramp_rate": 1.0
+    },
+    "current_control": {
+      "bandwidth": 1000.0,
+      "i_gain": NaN,
+      "p_gain": 0.0
+    },
+    "encoder": {
+      "bandwidth": 1000.0,
+      "cpr": 8192,
+      "direction": null,
+      "enable_phase_interpolation": true,
+      "is_ready": null,
+      "mode": 0,
+      "phase_offset": null,
+      "phase_offset_float": null,
+      "pre_calibrated": false
+    },
+    "encoder_live": {
+      "pos_estimate": 9.155274892691523e-05,
+      "shadow_count": 0
+    },
+    "errors": {
+      "axis": 0,
+      "controller": 0,
+      "encoder": 0,
+      "motor": 0
+    },
+    "motor": {
+      "acim_autoflux_min_Id": 10.0,
+      "acim_gain_min_flux": 10.0,
+      "calibration_current": 10.0,
+      "current_lim": 10.0,
+      "current_lim_margin": 8.0,
+      "inverter_temp_limit_lower": 100.0,
+      "inverter_temp_limit_upper": 120.0,
+      "motor_type": 0,
+      "phase_inductance": 0.0,
+      "phase_resistance": 0.0,
+      "pole_pairs": 7,
+      "pre_calibrated": false,
+      "requested_current_range": 60.0,
+      "resistance_calib_max_voltage": 2.0,
+      "torque_constant": 0.03999999910593033,
+      "torque_lim": Infinity
+    },
+    "requested_state": 0,
+    "sensorless": {
+      "observer_gain": 1000.0,
+      "pm_flux_linkage": 0.0015800000401213765
+    },
+    "state": 1
+  },
+  "fw_version": "0.0.0",
+  "hw_version": "3.6",
+  "serial_number": 56475421716532,
+  "system_config": {
+    "brake_resistance": 2.0,
+    "dc_bus_overvoltage_trip_level": 59.92000198364258,
+    "dc_bus_undervoltage_trip_level": 8.0,
+    "dc_max_negative_current": -9.999999974752427e-07,
+    "dc_max_positive_current": Infinity,
+    "enable_brake_resistor": null,
+    "max_regen_current": 0.0
+  },
+  "vbus_voltage": 40.65703201293945
+}

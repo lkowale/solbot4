@@ -135,6 +135,7 @@ def generate_launch_description():
                 name='mapviz',
                 parameters=[{'use_sim_time': use_sim_time}],
                 arguments=['-c', mapviz_config_file],
+                output='screen',
             )
         ]
     )

@@ -7,11 +7,11 @@ enable_antialiasing: true
 show_displays: true
 show_status_bar: true
 show_capture_tools: true
-window_width: 1860
+window_width: 1854
 window_height: 1011
-view_scale: 0.0573085509
-offset_x: -4.22430754
-offset_y: 11.2838011
+view_scale: 0.0280397553
+offset_x: -7.05317497
+offset_y: -7.26562309
 use_latest_transforms: true
 background: "#a0a0a4"
 image_transport: raw
@@ -27,6 +27,7 @@ displays:
           name: OpenStreetMap
           type: wmts
       bing_api_key: ""
+      stadia_api_key: ""
       source: OpenStreetMap
   - type: mapviz_plugins/navsat
     name: new display
@@ -45,7 +46,7 @@ displays:
   - type: mapviz_plugins/tf_frame
     name: new display
     config:
-      visible: true
+      visible: false
       collapsed: false
       frame: base_footprint
       color: "#f66151"
@@ -63,7 +64,7 @@ displays:
       color: "#f66151"
       draw_style: arrows
       position_tolerance: 0
-      buffer_size: 2000
+      buffer_size: 1
       show_laps: false
       show_covariance: false
       show_all_covariances: false
@@ -119,14 +120,14 @@ displays:
   - type: mapviz_plugins/robot_image
     name: new display
     config:
-      visible: true
+      visible: false
       collapsed: false
       frame: base_footprint
-      image: /home/aa/ros2_ws/src/solbot3/sol3_bringup/config/robot_icon.png
+      image: /home/aa/ros2_ws4/src/navigation/nav2_bringup/config/robot_icon.png
       width: 2
       height: 1
       offset_x: -1
-      offset_y: 0
+      offset_y: 1
   - type: mapviz_plugins/pose
     name: new display
     config:

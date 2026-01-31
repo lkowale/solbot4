@@ -31,7 +31,7 @@ source /home/aa/ros2_ws4/install/setup.bash
 # Default settings
 HEADLESS="${HEADLESS:-True}"
 USE_RVIZ="${USE_RVIZ:-False}"
-USE_MAPVIZ="${USE_MAPVIZ:-False}"
+USE_MAPVIZ="${USE_MAPVIZ:-True}"
 
 # Get the params file path (pausable version)
 PARAMS_FILE=$(ros2 pkg prefix solbot4_nav2_bringup)/share/solbot4_nav2_bringup/params/nav2_params_move_seq_pausable.yaml

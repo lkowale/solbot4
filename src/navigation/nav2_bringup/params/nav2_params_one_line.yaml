@@ -25,6 +25,10 @@ bt_navigator:
     plugin_lib_names:
       - pause_condition_bt_node
       - convert_geo_points_bt_node
+      - get_pose_from_poses_bt_node
+      - publish_path_bt_node
+      - move_sequence_action_bt_node
+      - reverse_path_bt_node
     error_code_names:
       - compute_path_error_code
       - follow_path_error_code
@@ -70,7 +74,7 @@ controller_server:
       regulated_linear_scaling_min_radius: 0.9
       regulated_linear_scaling_min_speed: 0.25
       allow_reversing: false
-      use_rotate_to_heading: true
+      use_rotate_to_heading: false
       rotate_to_heading_min_angle: 0.785
       max_angular_accel: 3.2
       max_robot_pose_search_dist: 10.0
@@ -106,7 +110,7 @@ behavior_server:
     local_footprint_topic: local_costmap/published_footprint
     global_footprint_topic: global_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait", "move_sequence"]
     spin:
       plugin: "nav2_behaviors::Spin"
     backup:
@@ -117,6 +121,8 @@ behavior_server:
       plugin: "nav2_behaviors::Wait"
     assisted_teleop:
       plugin: "nav2_behaviors::AssistedTeleop"
+    move_sequence:
+      plugin: "move_sequence_behavior::MoveSequence"
     local_frame: odom
     global_frame: map
     robot_base_frame: base_footprint
@@ -204,8 +210,8 @@ global_costmap:
       resolution: 0.05
       track_unknown_space: true
       rolling_window: true
-      width: 10
-      height: 10
+      width: 50
+      height: 50
       plugins: ["obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"

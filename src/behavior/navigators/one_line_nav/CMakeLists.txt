@@ -44,17 +44,9 @@ add_library(one_line_navigator SHARED
 ament_target_dependencies(one_line_navigator ${dependencies})
 target_link_libraries(one_line_navigator nlohmann_json::nlohmann_json)
 
-# BT node for converting geo points to map coordinates
-add_library(convert_geo_points_bt_node SHARED
-  src/convert_geo_points.cpp
-)
-ament_target_dependencies(convert_geo_points_bt_node ${dependencies})
-target_compile_definitions(convert_geo_points_bt_node PRIVATE BT_PLUGIN_EXPORT)
-
 # Install libraries
 install(TARGETS
   one_line_navigator
-  convert_geo_points_bt_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -74,7 +66,7 @@ install(DIRECTORY behavior_trees/
 pluginlib_export_plugin_description_file(nav2_core navigator_plugins.xml)
 
 ament_export_include_directories(include)
-ament_export_libraries(one_line_navigator convert_geo_points_bt_node)
+ament_export_libraries(one_line_navigator)
 ament_export_dependencies(${dependencies})
 
 ament_package()

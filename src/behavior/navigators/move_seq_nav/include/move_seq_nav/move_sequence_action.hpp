@@ -44,6 +44,8 @@ public:
       BT::InputPort<float>("segment_distance_traveled", 0.0f, "Distance already traveled in segment"),
       BT::InputPort<std::string>("progress_file", "/tmp/move_seq_progress.json", "File to save progress"),
       BT::OutputPort<uint16_t>("error_code", "Error code from action result"),
+      BT::OutputPort<uint16_t>("current_segment_idx", "Current segment index during execution"),
+      BT::OutputPort<float>("current_segment_distance", "Distance traveled in current segment"),
     });
   }
 

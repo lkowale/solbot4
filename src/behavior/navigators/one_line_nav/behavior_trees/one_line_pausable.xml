@@ -20,7 +20,9 @@
       <!-- Convert WGS84 coordinates to map frame using robot_localization/fromLL -->
       <ConvertGeoPoints geo_points="{geo_points}" map_points="{map_points}"/>
       <GetPoseFromPoses poses="{map_points}" pose="{start_pose}" index="0" />
-      <ComputePathThroughPoses goals="{map_points}" path="{path}" start="{start_pose}" planner_id="StraightLine" error_code_id="{compute_path_error_code}"/>
+      <GetPoseFromPoses poses="{map_points}" pose="{end_pose}" index="1" />
+      <ComputePathToPose goal="{end_pose}" path="{main_path}" start="{start_pose}" planner_id="StraightLine" error_code_id="{compute_path_error_code}"/>
+      <PublishPath topic_name="/debug_main_path" path="{main_path}"/>
       <Script code=" current_component:='to_path_start' " />
 
       <ReactiveSequence>
@@ -33,20 +35,20 @@
         <ReactiveFallback name="Traverse iter_path">
           <Precondition if="current_component=='to_path_start'" else="FAILURE">
             <Sequence name="Traverse to_path_start">
-              <GetPoseFromPath path="{path}" pose="{start_pose}" index="0" />
-              <ComputePathToPose goal="{start_pose}" path="{path_to_start}" planner_id="GridBased" error_code_id="{compute_path_error_code}"/>
+              <GetPoseFromPath path="{main_path}" pose="{path_start_pose}" index="0" />
+              <ComputePathToPose goal="{path_start_pose}" path="{path_to_start}" planner_id="StraightLine" error_code_id="{compute_path_error_code}"/>
               <PublishPath topic_name="/to_start_path" path="{path_to_start}"/>
-              <FollowPath path="{path_to_start}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/> 
-              <Script code=" current_component:='swath' " />    
+              <FollowPath path="{path_to_start}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/>
+              <Script code=" current_component:='swath' " />
             </Sequence>
           </Precondition>
           <Precondition if="current_component=='swath'" else="FAILURE">
             <Sequence name="Traverse swath">
-              <PublishPath topic_name="/line_path" path="{path}"/>
+              <PublishPath topic_name="/line_path" path="{main_path}"/>
               <!-- <JobManager task_type="tool_down"/>
               <Wait name="WaitRecovery" wait_duration="1.0" />
               <JobManager task_type="start_planter"/> -->
-              <FollowPath path="{path}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/>
+              <FollowPath path="{main_path}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/>
               <Script code=" current_component:='turn' " />
             </Sequence>
           </Precondition>
@@ -60,14 +62,14 @@
               <!-- <Precondition if="resumed_on_swath==true" else="SUCCESS">
                 <Script code=" path:=uncut_path; resumed_on_swath:=false  "/>
               </Precondition> -->
-              <ReversePath input_path="{path}" output_path="{path}"/>           
+              <ReversePath input_path="{main_path}" output_path="{main_path}"/>           
               <Script code=" current_component:='to_path_start' " /> 
             </Sequence>
           </Precondition>
           <Precondition if="current_component=='null'" else="FAILURE">
             <Sequence name="End job">
               <!-- <JobManager task_type="end_job"/> -->
-              <!--Script code=" field_completed=true " /-->
+              <Script code=" field_completed:=true "/>
             </Sequence>
           </Precondition>
         </ReactiveFallback>

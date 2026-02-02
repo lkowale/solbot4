@@ -82,6 +82,8 @@ void MoveSequenceAction::on_wait_for_result(
   if (feedback) {
     last_segment_idx_ = feedback->current_segment;
     last_distance_traveled_ = feedback->distance_traveled;
+    setOutput("current_segment_idx", last_segment_idx_);
+    setOutput("current_segment_distance", last_distance_traveled_);
   }
 }
 

@@ -35,8 +35,8 @@
         <ReactiveFallback name="Traverse iter_path">
           <Precondition if="current_component=='to_path_start'" else="FAILURE">
             <Sequence name="Traverse to_path_start">
-              <GetPoseFromPath path="{main_path}" pose="{path_start_pose}" index="0" />
-              <ComputePathToPose goal="{path_start_pose}" path="{path_to_start}" planner_id="StraightLine" error_code_id="{compute_path_error_code}"/>
+              <!-- Use start_pose directly instead of GetPoseFromPath to avoid path consumption -->
+              <ComputePathToPose goal="{start_pose}" path="{path_to_start}" planner_id="StraightLine" error_code_id="{compute_path_error_code}"/>
               <PublishPath topic_name="/to_start_path" path="{path_to_start}"/>
               <FollowPath path="{path_to_start}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/>
               <Script code=" current_component:='swath' " />

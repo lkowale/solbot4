@@ -17,6 +17,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/MoveSequence.action"
   "action/RunMoveSequenceLoop.action"
   "action/RunOneLine.action"
+  "action/RunSwath.action"
   DEPENDENCIES builtin_interfaces geographic_msgs
 )
 

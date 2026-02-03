@@ -1,6 +1,5 @@
-# Nav2 parameters for solbot4 - OneLine Navigator configuration
-# Includes one_line_nav BehaviorTree Navigator with pause/resume support
-# Configured for Ackermann steering robot
+# Nav2 parameters for solbot4 - SwathNavigator configuration
+# Includes swath_nav BehaviorTree Navigator for multi-waypoint geo navigation
 
 bt_navigator:
   ros__parameters:
@@ -11,24 +10,21 @@ bt_navigator:
     default_server_timeout: 20
     wait_for_service_timeout: 1000
     action_server_result_timeout: 900.0
-    # Include the one_line_nav navigator alongside standard ones
-    navigators: ["navigate_to_pose", "navigate_through_poses", "run_one_line"]
+    navigators: ["navigate_to_pose", "navigate_through_poses", "run_swath"]
     navigate_to_pose:
       plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
     navigate_through_poses:
       plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
-    run_one_line:
-      plugin: "one_line_nav/OneLineNavigator"
-      default_one_line_bt_xml: "/home/aa/ros2_ws4/src/behavior/bt_plugins/one_line_nav/behavior_trees/one_line_pausable.xml"
-      fields_directory: "/home/aa/ros2_ws4/src/fields"
-    # Register custom BT node plugins (standard Nav2 nodes loaded automatically)
+    run_swath:
+      plugin: "swath_nav/SwathNavigator"
+      default_planner_id: "StraightLine"
+      default_controller_id: "FollowPath"
+      default_path_pub_topic: "swath_path"
+    default_swath_bt_xml: "/home/aa/ros2_ws4/src/behavior/navigators/swath_nav/behavior_trees/swath_nav.xml"
     plugin_lib_names:
-      - pause_condition_bt_node
       - convert_geo_points_bt_node
-      - get_pose_from_poses_bt_node
       - publish_path_bt_node
-      - move_sequence_action_bt_node
-      - reverse_path_bt_node
+      - get_pose_from_poses_bt_node
     error_code_names:
       - compute_path_error_code
       - follow_path_error_code
@@ -52,8 +48,8 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.5
-      yaw_goal_tolerance: 0.75
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 7.0
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
@@ -110,7 +106,7 @@ behavior_server:
     local_footprint_topic: local_costmap/published_footprint
     global_footprint_topic: global_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait", "move_sequence"]
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
     spin:
       plugin: "nav2_behaviors::Spin"
     backup:
@@ -121,8 +117,6 @@ behavior_server:
       plugin: "nav2_behaviors::Wait"
     assisted_teleop:
       plugin: "nav2_behaviors::AssistedTeleop"
-    move_sequence:
-      plugin: "move_sequence_behavior::MoveSequence"
     local_frame: odom
     global_frame: map
     robot_base_frame: base_footprint

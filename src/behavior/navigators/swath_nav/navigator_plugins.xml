@@ -1,0 +1,10 @@
+<class_libraries>
+  <library path="swath_navigator">
+    <class
+      name="swath_nav/SwathNavigator"
+      type="swath_nav::SwathNavigator"
+      base_class_type="nav2_core::NavigatorBase">
+      <description>Swath Navigator for WGS84 geo points navigation</description>
+    </class>
+  </library>
+</class_libraries>

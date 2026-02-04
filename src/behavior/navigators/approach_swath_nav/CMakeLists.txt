@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(swath_nav)
+project(approach_swath_nav)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -35,14 +35,14 @@ set(dependencies
 )
 
 # Navigator plugin library
-add_library(swath_navigator SHARED
-  src/swath_navigator.cpp
+add_library(approach_swath_navigator SHARED
+  src/approach_swath_navigator.cpp
 )
-ament_target_dependencies(swath_navigator ${dependencies})
+ament_target_dependencies(approach_swath_navigator ${dependencies})
 
 # Install libraries
 install(TARGETS
-  swath_navigator
+  approach_swath_navigator
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -62,7 +62,7 @@ install(DIRECTORY behavior_trees/
 pluginlib_export_plugin_description_file(nav2_core navigator_plugins.xml)
 
 ament_export_include_directories(include)
-ament_export_libraries(swath_navigator)
+ament_export_libraries(approach_swath_navigator)
 ament_export_dependencies(${dependencies})
 
 ament_package()

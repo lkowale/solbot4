@@ -5,13 +5,13 @@
 #include <memory>
 #include <vector>
 
-#include "swath_nav/swath_navigator.hpp"
+#include "approach_swath_nav/approach_swath_navigator.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 
-namespace swath_nav
+namespace approach_swath_nav
 {
 
-bool SwathNavigator::configure(
+bool ApproachSwathNavigator::configure(
   rclcpp_lifecycle::LifecycleNode::WeakPtr parent_node,
   std::shared_ptr<nav2_util::OdomSmoother> /*odom_smoother*/)
 {
@@ -28,7 +28,7 @@ bool SwathNavigator::configure(
     rclcpp::ParameterValue("FollowPath"));
   nav2_util::declare_parameter_if_not_declared(
     node, getName() + ".default_path_pub_topic",
-    rclcpp::ParameterValue("swath_path"));
+    rclcpp::ParameterValue("to_start_path"));
 
   node->get_parameter(getName() + ".default_planner_id", default_planner_id_);
   node->get_parameter(getName() + ".default_controller_id", default_controller_id_);
@@ -37,7 +37,7 @@ bool SwathNavigator::configure(
   return true;
 }
 
-std::string SwathNavigator::getDefaultBTFilepath(
+std::string ApproachSwathNavigator::getDefaultBTFilepath(
   rclcpp_lifecycle::LifecycleNode::WeakPtr parent_node)
 {
   std::string default_bt_xml_filename;
@@ -47,20 +47,20 @@ std::string SwathNavigator::getDefaultBTFilepath(
     return default_bt_xml_filename;
   }
 
-  if (!node->has_parameter("default_swath_bt_xml")) {
+  if (!node->has_parameter("default_approach_swath_bt_xml")) {
     std::string pkg_share_dir =
-      ament_index_cpp::get_package_share_directory("swath_nav");
+      ament_index_cpp::get_package_share_directory("approach_swath_nav");
     node->declare_parameter<std::string>(
-      "default_swath_bt_xml",
-      pkg_share_dir + "/behavior_trees/swath_nav.xml");
+      "default_approach_swath_bt_xml",
+      pkg_share_dir + "/behavior_trees/approach_swath.xml");
   }
 
-  node->get_parameter("default_swath_bt_xml", default_bt_xml_filename);
+  node->get_parameter("default_approach_swath_bt_xml", default_bt_xml_filename);
 
   return default_bt_xml_filename;
 }
 
-bool SwathNavigator::goalReceived(ActionT::Goal::ConstSharedPtr goal)
+bool ApproachSwathNavigator::goalReceived(ActionT::Goal::ConstSharedPtr goal)
 {
   auto bt_xml_filename = goal->behavior_tree;
 
@@ -75,14 +75,15 @@ bool SwathNavigator::goalReceived(ActionT::Goal::ConstSharedPtr goal)
     return false;
   }
 
-  if (goal->geo_points.empty()) {
-    RCLCPP_ERROR(logger_, "No geo_points provided");
+  if (goal->map_points.empty()) {
+    RCLCPP_ERROR(logger_, "No map_points provided");
     return false;
   }
 
   auto blackboard = bt_action_server_->getBlackboard();
 
-  blackboard->set<std::vector<geographic_msgs::msg::GeoPoint>>("geo_points", goal->geo_points);
+  // Set map_points on blackboard (BT will extract goal_pose)
+  blackboard->set<std::vector<geometry_msgs::msg::PoseStamped>>("map_points", goal->map_points);
 
   std::string planner_id = goal->planner_id.empty() ? default_planner_id_ : goal->planner_id;
   std::string controller_id = goal->controller_id.empty() ? default_controller_id_ : goal->controller_id;
@@ -92,42 +93,35 @@ bool SwathNavigator::goalReceived(ActionT::Goal::ConstSharedPtr goal)
   blackboard->set<std::string>("controller_id", controller_id);
   blackboard->set<std::string>("path_pub_topic", path_pub_topic);
 
-  RCLCPP_INFO(logger_, "SwathNavigator received goal with %zu geo_points", goal->geo_points.size());
+  RCLCPP_INFO(logger_, "ApproachSwathNavigator received %zu map_points", goal->map_points.size());
+  RCLCPP_INFO(logger_, "First point: [x: %.2f, y: %.2f]",
+    goal->map_points[0].pose.position.x, goal->map_points[0].pose.position.y);
   RCLCPP_INFO(logger_, "Using planner_id: %s, controller_id: %s, path_pub_topic: %s",
     planner_id.c_str(), controller_id.c_str(), path_pub_topic.c_str());
 
   return true;
 }
 
-void SwathNavigator::onLoop()
+void ApproachSwathNavigator::onLoop()
 {
   auto feedback_msg = std::make_shared<ActionT::Feedback>();
   auto blackboard = bt_action_server_->getBlackboard();
 
-  float distance_traveled = 0.0f;
-  float total_distance = 0.0f;
-  uint32_t current_waypoint = 0;
+  float distance_remaining = 0.0f;
+  (void)blackboard->get("distance_remaining", distance_remaining);
 
-  (void)blackboard->get("distance_traveled", distance_traveled);
-  (void)blackboard->get("total_distance", total_distance);
-  (void)blackboard->get("current_waypoint", current_waypoint);
-
-  feedback_msg->distance_traveled = distance_traveled;
-  feedback_msg->total_distance = total_distance;
-  feedback_msg->current_waypoint = current_waypoint;
+  feedback_msg->distance_remaining = distance_remaining;
 
   bt_action_server_->publishFeedback(feedback_msg);
 }
 
-void SwathNavigator::onPreempt(ActionT::Goal::ConstSharedPtr goal)
+void ApproachSwathNavigator::onPreempt(ActionT::Goal::ConstSharedPtr goal)
 {
   RCLCPP_INFO(logger_, "Received goal preemption request");
 
   auto blackboard = bt_action_server_->getBlackboard();
 
-  if (!goal->geo_points.empty()) {
-    blackboard->set<std::vector<geographic_msgs::msg::GeoPoint>>("geo_points", goal->geo_points);
-  }
+  blackboard->set<std::vector<geometry_msgs::msg::PoseStamped>>("map_points", goal->map_points);
 
   std::string planner_id = goal->planner_id.empty() ? default_planner_id_ : goal->planner_id;
   std::string controller_id = goal->controller_id.empty() ? default_controller_id_ : goal->controller_id;
@@ -138,7 +132,7 @@ void SwathNavigator::onPreempt(ActionT::Goal::ConstSharedPtr goal)
   blackboard->set<std::string>("path_pub_topic", path_pub_topic);
 }
 
-void SwathNavigator::goalCompleted(
+void ApproachSwathNavigator::goalCompleted(
   typename ActionT::Result::SharedPtr result,
   const nav2_behavior_tree::BtStatus final_bt_status)
 {
@@ -151,11 +145,11 @@ void SwathNavigator::goalCompleted(
   }
 
   RCLCPP_INFO(
-    logger_, "SwathNavigator completed with status: %d",
+    logger_, "ApproachSwathNavigator completed with status: %d",
     static_cast<int>(final_bt_status));
 }
 
-}  // namespace swath_nav
+}  // namespace approach_swath_nav
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(swath_nav::SwathNavigator, nav2_core::NavigatorBase)
+PLUGINLIB_EXPORT_CLASS(approach_swath_nav::ApproachSwathNavigator, nav2_core::NavigatorBase)

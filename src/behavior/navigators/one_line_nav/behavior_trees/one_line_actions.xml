@@ -1,0 +1,68 @@
+<!--
+  OneLine Actions Behavior Tree
+
+  Navigates along a single line using standalone action servers (not Nav2 navigators).
+  Uses:
+    - approach_swath_action (/approach_swath)
+    - run_swath_action (/run_swath)
+    - move_sequence_behavior (/move_sequence)
+
+  Supports pause/resume via /pause topic.
+
+  To pause:  ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: true, source: 'operator', reason: 'Manual pause'}"
+  To resume: ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: false, source: 'operator', reason: 'Resuming'}"
+
+  Blackboard variables:
+    Input (set by navigator):
+      - geo_points: vector of GeoPoint (start, end)
+
+    Intermediate:
+      - map_points: vector of PoseStamped in map frame
+-->
+<root BTCPP_format="4" main_tree_to_execute="OneLineActions">
+  <BehaviorTree ID="OneLineActions">
+    <Sequence>
+      <!-- Initial conversion of geo_points to map_points -->
+      <ConvertGeoPoints geo_points="{geo_points}" map_points="{map_points}"/>
+
+      <KeepRunningUntilFailure>
+        <ReactiveSequence>
+          <!-- Check pause state -->
+          <Fallback>
+            <NotPaused pause_topic="/pause"/>
+            <WaitUntilNotPaused pause_topic="/pause"/>
+          </Fallback>
+
+          <Sequence name="Traverse line">
+            <!-- Approach swath start using standalone action server -->
+            <ApproachSwathAction map_points="{map_points}"
+                                 planner_id="StraightLine"
+                                 controller_id="FollowPath"
+                                 path_pub_topic="to_start_path"
+                                 error_code="{approach_error_code}"/>
+
+            <!-- Navigate swath using standalone action server -->
+            <RunSwathAction map_points="{map_points}"
+                            planner_id="StraightLine"
+                            controller_id="FollowPath"
+                            path_pub_topic="swath_path"
+                            error_code="{swath_error_code}"/>
+
+            <!-- 180 degree turn using move_sequence behavior -->
+            <MoveSequence sequence_file="same_line_turn.json"
+                          segment_idx="0"
+                          segment_distance_traveled="0.0"
+                          progress_file="/tmp/move_sequence_progress.json"
+                          current_segment_idx="{segment_idx}"
+                          current_segment_distance="{seg_trav}"
+                          error_code="{move_seq_error_code}"/>
+
+            <!-- Reverse map_points for next pass -->
+            <ReversePoses poses="{map_points}"/>
+          </Sequence>
+
+        </ReactiveSequence>
+      </KeepRunningUntilFailure>
+    </Sequence>
+  </BehaviorTree>
+</root>

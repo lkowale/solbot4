@@ -1,0 +1,24 @@
+<!--
+  Swath Navigation Behavior Tree (SubTree)
+
+  Navigates through a series of map points (the swath path).
+  Can be used standalone or included as SubTree in other behavior trees.
+
+  Blackboard variables:
+    Input:
+      - map_points: vector of PoseStamped in map frame (already converted)
+      - swath_planner_id: string (planner plugin to use)
+      - swath_controller_id: string (controller plugin to use)
+      - swath_path_pub_topic: string (topic to publish path)
+-->
+<root BTCPP_format="4" main_tree_to_execute="SwathNav">
+  <BehaviorTree ID="SwathNav">
+    <Sequence>
+      <!-- Compute path through all waypoints -->
+      <ComputePathThroughPoses goals="{map_points}" path="{swath_path}" planner_id="{swath_planner_id}" error_code_id="{swath_compute_error}"/>
+      <PublishPath topic_name="{swath_path_pub_topic}" path="{swath_path}"/>
+      <!-- Follow the computed path -->
+      <FollowPath path="{swath_path}" controller_id="{swath_controller_id}" error_code_id="{swath_follow_error}"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

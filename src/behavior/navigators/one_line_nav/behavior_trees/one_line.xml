@@ -1,0 +1,82 @@
+<!--
+  Pausable Swath Looping Behavior Tree
+
+  Uses ApproachSwathAction and RunSwathAction navigators for swath navigation.
+  Pattern: approach_swath (once) -> [navigate_swath -> 180_turn -> reverse_geo_points] (loop)
+
+  Subscribe to /pause topic with solbot4_msgs/msg/Pause to pause/resume.
+
+  To pause:  ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: true, source: 'operator', reason: 'Manual pause'}"
+  To resume: ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: false, source: 'operator', reason: 'Resuming'}"
+
+  Blackboard variables:
+    Input (set by navigator):
+      - geo_points: vector of GeoPoint (swath waypoints)
+-->
+<root BTCPP_format="4" main_tree_to_execute="OneLinePausable">
+  <BehaviorTree ID="OneLinePausable">
+    <Sequence>
+      <!-- Get start point (first geo_point) for initial approach -->
+      <GetGeoPointFromVector geo_points="{geo_points}" geo_point="{start_point}" index="0"/>
+
+      <!-- Initial approach to swath start (runs once) -->
+      <SubTree ID="PausableApproach"/>
+
+      <!-- Infinite loop: navigate -> turn -> reverse -> repeat -->
+      <KeepRunningUntilFailure>
+        <Sequence>
+          <SubTree ID="PausableNavigate"/>
+          <SubTree ID="PausableTurn"/>
+        </Sequence>
+      </KeepRunningUntilFailure>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Subtree: Approach with pause support -->
+  <BehaviorTree ID="PausableApproach">
+    <ReactiveSequence>
+      <Fallback>
+        <NotPaused pause_topic="/pause"/>
+        <WaitUntilNotPaused pause_topic="/pause"/>
+      </Fallback>
+      <ApproachSwathAction start_point="{start_point}"
+                           planner_id="GridBased"
+                           controller_id="FollowPath"
+                           path_pub_topic="to_start_path"
+                           error_code="{approach_error_code}"/>
+    </ReactiveSequence>
+  </BehaviorTree>
+
+  <!-- Subtree: Navigate swath with pause support -->
+  <BehaviorTree ID="PausableNavigate">
+    <ReactiveSequence>
+      <Fallback>
+        <NotPaused pause_topic="/pause"/>
+        <WaitUntilNotPaused pause_topic="/pause"/>
+      </Fallback>
+      <RunSwathAction geo_points="{geo_points}"
+                      planner_id="StraightLine"
+                      controller_id="FollowPath"
+                      path_pub_topic="swath_path"
+                      error_code="{swath_error_code}"/>
+    </ReactiveSequence>
+  </BehaviorTree>
+
+  <!-- Subtree: Turn 180 and reverse geo_points with pause support -->
+  <BehaviorTree ID="PausableTurn">
+    <ReactiveSequence>
+      <Fallback>
+        <NotPaused pause_topic="/pause"/>
+        <WaitUntilNotPaused pause_topic="/pause"/>
+      </Fallback>
+      <Sequence>
+        <MoveSequence sequence_file="same_line_turn_fast.json"
+                      segment_idx="{segment_idx}"
+                      segment_distance_traveled="{seg_trav}"
+                      current_segment_idx="{segment_idx}"
+                      current_segment_distance="{seg_trav}"/>
+        <ReverseGeoPoints geo_points="{geo_points}"/>
+      </Sequence>
+    </ReactiveSequence>
+  </BehaviorTree>
+</root>

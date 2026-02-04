@@ -2,6 +2,8 @@
   Pausable OneLine Behavior Tree
 
   Navigates along a single line defined by WGS84 start/end points with pause/resume support.
+  Uses SubTrees from approach_swath.xml and swath_nav.xml to keep logic separated.
+
   Subscribe to /pause topic with solbot4_msgs/msg/Pause to pause/resume.
 
   To pause:  ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: true, source: 'operator', reason: 'Manual pause'}"
@@ -15,66 +17,52 @@
       - map_points: vector of PoseStamped in map frame
 -->
 <root BTCPP_format="4" main_tree_to_execute="OneLinePausable">
+  <!-- Include SubTree behavior tree files -->
+  <include path="subtrees/approach_swath.xml"/>
+  <include path="subtrees/swath_nav.xml"/>
+
   <BehaviorTree ID="OneLinePausable">
     <Sequence>
-      <!-- Convert WGS84 coordinates to map frame using robot_localization/fromLL -->
+      <!-- Initial conversion -->
       <ConvertGeoPoints geo_points="{geo_points}" map_points="{map_points}"/>
-      <GetPoseFromPoses poses="{map_points}" pose="{start_pose}" index="0" />
-      <GetPoseFromPoses poses="{map_points}" pose="{end_pose}" index="1" />
-      <ComputePathToPose goal="{end_pose}" path="{main_path}" start="{start_pose}" planner_id="StraightLine" error_code_id="{compute_path_error_code}"/>
-      <PublishPath topic_name="/debug_main_path" path="{main_path}"/>
-      <Script code=" current_component:='to_path_start' " />
 
-      <ReactiveSequence>
-        <!-- Check pause state - if paused, WaitUntilNotPaused keeps tree RUNNING -->
-        <Fallback>
-          <NotPaused pause_topic="/pause"/>
-          <WaitUntilNotPaused pause_topic="/pause"/>
-        </Fallback>
+      <!-- Set parameters for SubTrees -->
+      <SetBlackboard output_key="approach_planner_id" value="GridBased"/>
+      <SetBlackboard output_key="approach_controller_id" value="FollowPath"/>
+      <SetBlackboard output_key="approach_path_pub_topic" value="to_start_path"/>
+      <SetBlackboard output_key="swath_planner_id" value="StraightLine"/>
+      <SetBlackboard output_key="swath_controller_id" value="FollowPath"/>
+      <SetBlackboard output_key="swath_path_pub_topic" value="swath_path"/>
 
-        <ReactiveFallback name="Traverse iter_path">
-          <Precondition if="current_component=='to_path_start'" else="FAILURE">
-            <Sequence name="Traverse to_path_start">
-              <!-- Use start_pose directly instead of GetPoseFromPath to avoid path consumption -->
-              <ComputePathToPose goal="{start_pose}" path="{path_to_start}" planner_id="StraightLine" error_code_id="{compute_path_error_code}"/>
-              <PublishPath topic_name="/to_start_path" path="{path_to_start}"/>
-              <FollowPath path="{path_to_start}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/>
-              <Script code=" current_component:='swath' " />
-            </Sequence>
-          </Precondition>
-          <Precondition if="current_component=='swath'" else="FAILURE">
-            <Sequence name="Traverse swath">
-              <PublishPath topic_name="/line_path" path="{main_path}"/>
-              <!-- <JobManager task_type="tool_down"/>
-              <Wait name="WaitRecovery" wait_duration="1.0" />
-              <JobManager task_type="start_planter"/> -->
-              <FollowPath path="{main_path}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/>
-              <Script code=" current_component:='turn' " />
-            </Sequence>
-          </Precondition>
-          <Precondition if="current_component=='turn'" else="FAILURE">
-            <Sequence name="Traverse turn">
-              <!-- <JobManager task_type="stop_planter"/>
-              <JobManager task_type="tool_up"/>
-              <Wait name="WaitRecovery" wait_duration="1.0" /> -->
-              <MoveSequence sequence_file="same_line_turn_fast.json" segment_idx="{segment_idx}" segment_distance_traveled="{seg_trav}"
-                              current_segment_idx="{segment_idx}" current_segment_distance="{seg_trav}"/>   
-              <!-- <Precondition if="resumed_on_swath==true" else="SUCCESS">
-                <Script code=" path:=uncut_path; resumed_on_swath:=false  "/>
-              </Precondition> -->
-              <ReversePath input_path="{main_path}" output_path="{main_path}"/>           
-              <Script code=" current_component:='to_path_start' " /> 
-            </Sequence>
-          </Precondition>
-          <Precondition if="current_component=='null'" else="FAILURE">
-            <Sequence name="End job">
-              <!-- <JobManager task_type="end_job"/> -->
-              <Script code=" field_completed:=true "/>
-            </Sequence>
-          </Precondition>
-        </ReactiveFallback>
+      <KeepRunningUntilFailure>
+        <ReactiveSequence>
+          <!-- Check pause state -->
+          <Fallback>
+            <NotPaused pause_topic="/pause"/>
+            <WaitUntilNotPaused pause_topic="/pause"/>
+          </Fallback>
 
-      </ReactiveSequence>
+          <Sequence name="Traverse line">
+            <!-- Approach: Navigate to swath start (uses approach_swath.xml) -->
+            <SubTree ID="ApproachSwath" _autoremap="true"/>
+
+            <!-- Navigate swath: Follow path through all map_points (uses swath_nav.xml) -->
+            <SubTree ID="SwathNav" _autoremap="true"/>
+
+            <!-- 180 degree turn -->
+            <MoveSequence sequence_file="same_line_turn_fast.json"
+                          segment_idx="{segment_idx}"
+                          segment_distance_traveled="{seg_trav}"
+                          current_segment_idx="{segment_idx}"
+                          current_segment_distance="{seg_trav}"/>
+
+            <!-- Reverse geo_points and re-convert to update map_points -->
+            <ReverseGeoPoints geo_points="{geo_points}"/>
+            <ConvertGeoPoints geo_points="{geo_points}" map_points="{map_points}"/>
+          </Sequence>
+
+        </ReactiveSequence>
+      </KeepRunningUntilFailure>
     </Sequence>
   </BehaviorTree>
 </root>

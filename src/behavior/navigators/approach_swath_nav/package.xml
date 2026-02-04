@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>swath_nav</name>
+  <name>approach_swath_nav</name>
   <version>1.0.0</version>
-  <description>BehaviorTree Navigator plugin for swath navigation using WGS84 geo points</description>
+  <description>BehaviorTree Navigator plugin for approaching swath start point using WGS84 geo point</description>
   <maintainer email="lkowale@gmail.com">aa</maintainer>
   <license>Apache-2.0</license>
 

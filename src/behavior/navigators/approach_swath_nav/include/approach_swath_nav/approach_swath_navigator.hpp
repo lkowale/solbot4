@@ -1,35 +1,35 @@
 // Copyright (c) 2024
 // Licensed under the Apache License, Version 2.0
 
-#ifndef SWATH_NAV__SWATH_NAVIGATOR_HPP_
-#define SWATH_NAV__SWATH_NAVIGATOR_HPP_
+#ifndef APPROACH_SWATH_NAV__APPROACH_SWATH_NAVIGATOR_HPP_
+#define APPROACH_SWATH_NAV__APPROACH_SWATH_NAVIGATOR_HPP_
 
 #include <string>
 #include <memory>
 #include <vector>
 
 #include "nav2_core/behavior_tree_navigator.hpp"
-#include "solbot4_msgs/action/run_swath.hpp"
+#include "solbot4_msgs/action/run_approach_swath.hpp"
 #include "nav2_util/odometry_utils.hpp"
-#include "geographic_msgs/msg/geo_point.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 
-namespace swath_nav
+namespace approach_swath_nav
 {
 
-class SwathNavigator
-  : public nav2_core::BehaviorTreeNavigator<solbot4_msgs::action::RunSwath>
+class ApproachSwathNavigator
+  : public nav2_core::BehaviorTreeNavigator<solbot4_msgs::action::RunApproachSwath>
 {
 public:
-  using ActionT = solbot4_msgs::action::RunSwath;
+  using ActionT = solbot4_msgs::action::RunApproachSwath;
 
-  SwathNavigator() = default;
-  ~SwathNavigator() override = default;
+  ApproachSwathNavigator() = default;
+  ~ApproachSwathNavigator() override = default;
 
   bool configure(
     rclcpp_lifecycle::LifecycleNode::WeakPtr parent_node,
     std::shared_ptr<nav2_util::OdomSmoother> odom_smoother) override;
 
-  std::string getName() override {return std::string("run_swath");}
+  std::string getName() override {return std::string("approach_swath");}
 
   std::string getDefaultBTFilepath(
     rclcpp_lifecycle::LifecycleNode::WeakPtr node) override;
@@ -50,6 +50,6 @@ protected:
   std::string default_path_pub_topic_;
 };
 
-}  // namespace swath_nav
+}  // namespace approach_swath_nav
 
-#endif  // SWATH_NAV__SWATH_NAVIGATOR_HPP_
+#endif  // APPROACH_SWATH_NAV__APPROACH_SWATH_NAVIGATOR_HPP_

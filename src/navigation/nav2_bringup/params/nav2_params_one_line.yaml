@@ -11,16 +11,28 @@ bt_navigator:
     default_server_timeout: 20
     wait_for_service_timeout: 1000
     action_server_result_timeout: 900.0
-    # Include the one_line_nav navigator alongside standard ones
-    navigators: ["navigate_to_pose", "navigate_through_poses", "run_one_line"]
+    # Include navigators: one_line, approach_swath, run_swath
+    navigators: ["navigate_to_pose", "navigate_through_poses", "run_one_line", "approach_swath", "run_swath"]
     navigate_to_pose:
       plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
     navigate_through_poses:
       plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
     run_one_line:
       plugin: "one_line_nav/OneLineNavigator"
-      default_one_line_bt_xml: "/home/aa/ros2_ws4/src/behavior/bt_plugins/one_line_nav/behavior_trees/one_line_pausable.xml"
       fields_directory: "/home/aa/ros2_ws4/src/fields"
+    approach_swath:
+      plugin: "approach_swath_nav/ApproachSwathNavigator"
+      default_planner_id: "GridBased"
+      default_controller_id: "FollowPath"
+      default_path_pub_topic: "to_start_path"
+    run_swath:
+      plugin: "swath_nav/SwathNavigator"
+      default_planner_id: "StraightLine"
+      default_controller_id: "FollowPath"
+      default_path_pub_topic: "swath_path"
+    default_one_line_bt_xml: "/home/aa/ros2_ws4/src/behavior/navigators/one_line_nav/behavior_trees/one_line_pausable.xml"
+    default_approach_swath_bt_xml: "/home/aa/ros2_ws4/src/behavior/navigators/approach_swath_nav/behavior_trees/approach_swath.xml"
+    default_swath_bt_xml: "/home/aa/ros2_ws4/src/behavior/navigators/swath_nav/behavior_trees/swath_nav.xml"
     # Register custom BT node plugins (standard Nav2 nodes loaded automatically)
     plugin_lib_names:
       - pause_condition_bt_node
@@ -29,6 +41,10 @@ bt_navigator:
       - publish_path_bt_node
       - move_sequence_action_bt_node
       - reverse_path_bt_node
+      - approach_swath_action_bt_node
+      - run_swath_action_bt_node
+      - reverse_geo_points_bt_node
+      - get_geo_point_from_vector_bt_node
     error_code_names:
       - compute_path_error_code
       - follow_path_error_code

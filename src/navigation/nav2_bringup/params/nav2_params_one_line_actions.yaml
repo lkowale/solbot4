@@ -1,5 +1,9 @@
-# Nav2 parameters for solbot4 - SwathNavigator configuration
-# Includes swath_nav BehaviorTree Navigator for multi-waypoint geo navigation
+# Nav2 parameters for solbot4 - OneLine Navigator with Standalone Actions
+# Uses standalone action servers instead of Nav2 navigator plugins:
+#   - /approach_swath (approach_swath_action)
+#   - /run_swath (run_swath_action)
+#   - /move_sequence (move_sequence_behavior - Nav2 behavior)
+# Configured for Ackermann steering robot
 
 bt_navigator:
   ros__parameters:
@@ -10,27 +14,28 @@ bt_navigator:
     default_server_timeout: 20
     wait_for_service_timeout: 1000
     action_server_result_timeout: 900.0
-    navigators: ["navigate_to_pose", "navigate_through_poses", "approach_swath", "run_swath"]
+    # Only one_line navigator needed (approach_swath and run_swath are standalone)
+    navigators: ["navigate_to_pose", "navigate_through_poses", "run_one_line"]
     navigate_to_pose:
       plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
     navigate_through_poses:
       plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
-    approach_swath:
-      plugin: "approach_swath_nav/ApproachSwathNavigator"
-      default_planner_id: "GridBased"
-      default_controller_id: "FollowPath"
-      default_path_pub_topic: "to_start_path"
-    run_swath:
-      plugin: "swath_nav/SwathNavigator"
-      default_planner_id: "StraightLine"
-      default_controller_id: "FollowPath"
-      default_path_pub_topic: "swath_path"
-    default_approach_swath_bt_xml: "/home/aa/ros2_ws4/src/behavior/navigators/approach_swath_nav/behavior_trees/approach_swath.xml"
-    default_swath_bt_xml: "/home/aa/ros2_ws4/src/behavior/navigators/swath_nav/behavior_trees/swath_nav.xml"
+    run_one_line:
+      plugin: "one_line_nav/OneLineNavigator"
+      fields_directory: "/home/aa/ros2_ws4/src/fields"
+    # Use the new actions-based behavior tree
+    default_one_line_bt_xml: "/home/aa/ros2_ws4/src/behavior/navigators/one_line_nav/behavior_trees/one_line_actions.xml"
+    # Register custom BT node plugins
     plugin_lib_names:
+      - pause_condition_bt_node
       - convert_geo_points_bt_node
-      - publish_path_bt_node
       - get_pose_from_poses_bt_node
+      - publish_path_bt_node
+      - move_sequence_action_bt_node
+      - reverse_path_bt_node
+      - reverse_poses_bt_node
+      - approach_swath_action_bt_node
+      - run_swath_action_bt_node
     error_code_names:
       - compute_path_error_code
       - follow_path_error_code
@@ -54,12 +59,12 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 7.0
+      xy_goal_tolerance: 0.5
+      yaw_goal_tolerance: 7.00
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.5
+      desired_linear_vel: 0.7
       lookahead_dist: 0.6
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
@@ -74,7 +79,7 @@ controller_server:
       use_regulated_linear_velocity_scaling: true
       use_cost_regulated_linear_velocity_scaling: false
       regulated_linear_scaling_min_radius: 0.9
-      regulated_linear_scaling_min_speed: 0.5
+      regulated_linear_scaling_min_speed: 0.25
       allow_reversing: false
       use_rotate_to_heading: false
       rotate_to_heading_min_angle: 0.785
@@ -112,7 +117,7 @@ behavior_server:
     local_footprint_topic: local_costmap/published_footprint
     global_footprint_topic: global_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait", "move_sequence"]
     spin:
       plugin: "nav2_behaviors::Spin"
     backup:
@@ -123,6 +128,9 @@ behavior_server:
       plugin: "nav2_behaviors::Wait"
     assisted_teleop:
       plugin: "nav2_behaviors::AssistedTeleop"
+    move_sequence:
+      plugin: "move_sequence_behavior::MoveSequence"
+    sequence_files_directory: "/home/aa/ros2_ws4/src/behavior/actions/move_sequences"
     local_frame: odom
     global_frame: map
     robot_base_frame: base_footprint
@@ -148,8 +156,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [1.0, 0.0, 2.0]
-    min_velocity: [-1.0, 0.0, -2.0]
+    max_velocity: [0.5, 0.0, 2.0]
+    min_velocity: [-0.5, 0.0, -2.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"

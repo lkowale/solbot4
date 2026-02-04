@@ -1,4 +1,4 @@
-# Goal - navigate through a swath defined by map points (poses in map frame)
+# Goal - approach the start of a swath defined by map_points (poses in map frame)
 geometry_msgs/PoseStamped[] map_points
 string planner_id
 string controller_id
@@ -12,6 +12,4 @@ uint16 CANCELLED=1
 uint16 FAILED=2
 ---
 # Feedback
-float32 distance_traveled
-float32 total_distance
-uint32 current_waypoint
+float32 distance_remaining

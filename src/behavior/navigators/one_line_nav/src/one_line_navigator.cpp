@@ -123,10 +123,14 @@ bool OneLineNavigator::goalReceived(ActionT::Goal::ConstSharedPtr goal)
     return false;
   }
 
-  // Set geo_points on blackboard for ConvertGeoPoints BT node
+  // Set blackboard variables for BT nodes
   auto blackboard = bt_action_server_->getBlackboard();
   std::vector<geographic_msgs::msg::GeoPoint> geo_points = {start_point, end_point};
   blackboard->set<std::vector<geographic_msgs::msg::GeoPoint>>("geo_points", geo_points);
+  blackboard->set<std::string>("field_name", goal->field_name);
+  blackboard->set<std::string>("fields_directory", fields_directory_);
+  blackboard->set<int>("pass_number", 0);
+  blackboard->set<std::string>("stage", "approach");
 
   RCLCPP_INFO(logger_, "OneLineNavigator received goal:");
   RCLCPP_INFO(logger_, "Start Point: [lat: %lf, lon: %lf, alt: %lf]",

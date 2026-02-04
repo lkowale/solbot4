@@ -1,5 +1,5 @@
 <!--
-  OneLine Actions Behavior Tree
+  OneLine Actions Behavior Tree with Progress Persistence
 
   Navigates along a single line using standalone action servers (not Nav2 navigators).
   Uses:
@@ -7,7 +7,11 @@
     - run_swath_action (/run_swath)
     - move_sequence_behavior (/move_sequence)
 
-  Supports pause/resume via /pause topic.
+  Supports pause/resume via /pause topic with progress persistence.
+  Progress is saved to {fields_directory}/{field_name}/progress.json when paused.
+  On start, if progress file exists, resumes from saved stage.
+
+  Stage order: approach -> swath -> turn -> (next pass starts at approach)
 
   To pause:  ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: true, source: 'operator', reason: 'Manual pause'}"
   To resume: ros2 topic pub /pause solbot4_msgs/msg/Pause "{paused: false, source: 'operator', reason: 'Resuming'}"
@@ -15,50 +19,98 @@
   Blackboard variables:
     Input (set by navigator):
       - geo_points: vector of GeoPoint (start, end)
+      - field_name: name of the field being worked
+      - fields_directory: base directory for field files
+      - pass_number: current pass number
+      - stage: current stage (approach, swath, turn)
 
     Intermediate:
       - map_points: vector of PoseStamped in map frame
+      - has_progress: true if resuming from saved progress
 -->
 <root BTCPP_format="4" main_tree_to_execute="OneLineActions">
   <BehaviorTree ID="OneLineActions">
     <Sequence>
-      <!-- Initial conversion of geo_points to map_points -->
-      <ConvertGeoPoints geo_points="{geo_points}" map_points="{map_points}"/>
+      <!-- Try to load saved progress, or convert geo_points if no progress -->
+      <Fallback name="Initialize map_points">
+        <!-- Returns SUCCESS if valid progress loaded (map_points and stage set) -->
+        <LoadOneLineProgress
+            fields_directory="{fields_directory}"
+            field_name="{field_name}"
+            geo_points="{geo_points}"
+            map_points="{map_points}"
+            stage="{stage}"
+            pass_number="{pass_number}"
+            has_progress="{has_progress}"/>
+        <!-- Returns FAILURE above triggers geo conversion (fresh start) -->
+        <ConvertGeoPoints geo_points="{geo_points}" map_points="{map_points}"/>
+      </Fallback>
 
       <KeepRunningUntilFailure>
         <ReactiveSequence>
-          <!-- Check pause state -->
+          <!-- Check pause state and save progress when paused -->
           <Fallback>
             <NotPaused pause_topic="/pause"/>
-            <WaitUntilNotPaused pause_topic="/pause"/>
+            <Sequence name="Save and wait">
+              <!-- Save progress before waiting -->
+              <SaveOneLineProgress
+                  fields_directory="{fields_directory}"
+                  field_name="{field_name}"
+                  geo_points="{geo_points}"
+                  map_points="{map_points}"
+                  stage="{stage}"
+                  pass_number="{pass_number}"/>
+              <WaitUntilNotPaused pause_topic="/pause"/>
+            </Sequence>
           </Fallback>
 
           <Sequence name="Traverse line">
-            <!-- Approach swath start using standalone action server -->
-            <ApproachSwathAction map_points="{map_points}"
-                                 planner_id="StraightLine"
-                                 controller_id="FollowPath"
-                                 path_pub_topic="to_start_path"
-                                 error_code="{approach_error_code}"/>
+            <!-- APPROACH STAGE -->
+            <!-- Skip if already past approach stage (resuming from swath or turn) -->
+            <Fallback name="Approach or skip">
+              <CheckStagePast stage="{stage}" check="approach"/>
+              <Sequence>
+                <SetStage stage="approach" stage_out="{stage}"/>
+                <ApproachSwathAction map_points="{map_points}"
+                                     planner_id="StraightLine"
+                                     controller_id="FollowPath"
+                                     path_pub_topic="to_start_path"
+                                     error_code="{approach_error_code}"/>
+              </Sequence>
+            </Fallback>
 
-            <!-- Navigate swath using standalone action server -->
-            <RunSwathAction map_points="{map_points}"
-                            planner_id="StraightLine"
-                            controller_id="FollowPath"
-                            path_pub_topic="swath_path"
-                            error_code="{swath_error_code}"/>
+            <!-- SWATH STAGE -->
+            <!-- Skip if already past swath stage (resuming from turn) -->
+            <Fallback name="Swath or skip">
+              <CheckStagePast stage="{stage}" check="swath"/>
+              <Sequence>
+                <SetStage stage="swath" stage_out="{stage}"/>
+                <RunSwathAction map_points="{map_points}"
+                                planner_id="StraightLine"
+                                controller_id="FollowPath"
+                                path_pub_topic="swath_path"
+                                error_code="{swath_error_code}"/>
+              </Sequence>
+            </Fallback>
 
-            <!-- 180 degree turn using move_sequence behavior -->
-            <MoveSequence sequence_file="same_line_turn.json"
-                          segment_idx="0"
-                          segment_distance_traveled="0.0"
-                          progress_file="/tmp/move_sequence_progress.json"
-                          current_segment_idx="{segment_idx}"
-                          current_segment_distance="{seg_trav}"
-                          error_code="{move_seq_error_code}"/>
+            <!-- TURN STAGE -->
+            <Fallback name="Turn or skip">
+              <CheckStagePast stage="{stage}" check="turn"/>
+              <Sequence>
+                <SetStage stage="turn" stage_out="{stage}"/>
+                <MoveSequence sequence_file="same_line_turn.json"
+                              segment_idx="0"
+                              segment_distance_traveled="0.0"
+                              progress_file="/tmp/move_sequence_progress.json"
+                              current_segment_idx="{segment_idx}"
+                              current_segment_distance="{seg_trav}"
+                              error_code="{move_seq_error_code}"/>
+              </Sequence>
+            </Fallback>
 
-            <!-- Reverse map_points for next pass -->
+            <!-- Reverse map_points for next pass and reset stage -->
             <ReversePoses poses="{map_points}"/>
+            <SetStage stage="approach" stage_out="{stage}"/>
           </Sequence>
 
         </ReactiveSequence>

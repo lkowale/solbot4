@@ -36,6 +36,11 @@ bt_navigator:
       - reverse_poses_bt_node
       - approach_swath_action_bt_node
       - run_swath_action_bt_node
+      - save_one_line_progress_bt_node
+      - load_one_line_progress_bt_node
+      - clear_one_line_progress_bt_node
+      - set_stage_bt_node
+      - check_stage_bt_node
     error_code_names:
       - compute_path_error_code
       - follow_path_error_code
@@ -84,7 +89,7 @@ controller_server:
       use_rotate_to_heading: false
       rotate_to_heading_min_angle: 0.785
       max_angular_accel: 3.2
-      max_robot_pose_search_dist: 10.0
+      max_robot_pose_search_dist: 50.0
 
 planner_server:
   ros__parameters:

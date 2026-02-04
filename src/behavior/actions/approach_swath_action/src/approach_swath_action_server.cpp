@@ -69,12 +69,26 @@ rclcpp_action::CancelResponse ApproachSwathActionServer::handle_cancel(
   RCLCPP_INFO(this->get_logger(), "Received cancel request");
   is_cancelling_ = true;
 
-  // Cancel follow_path if active
-  if (follow_path_goal_handle_) {
-    follow_path_client_->async_cancel_goal(follow_path_goal_handle_);
-  }
+  // Cancel follow_path if active (thread-safe)
+  cancel_follow_path();
 
   return rclcpp_action::CancelResponse::ACCEPT;
+}
+
+void ApproachSwathActionServer::cancel_follow_path()
+{
+  std::lock_guard<std::mutex> lock(goal_handle_mutex_);
+  if (follow_path_goal_handle_) {
+    try {
+      follow_path_client_->async_cancel_goal(follow_path_goal_handle_);
+      RCLCPP_INFO(this->get_logger(), "Sent cancel request for follow_path");
+    } catch (const rclcpp_action::exceptions::UnknownGoalHandleError & e) {
+      RCLCPP_WARN(this->get_logger(), "Goal handle already invalid: %s", e.what());
+    } catch (const std::exception & e) {
+      RCLCPP_WARN(this->get_logger(), "Error cancelling follow_path: %s", e.what());
+    }
+    follow_path_goal_handle_ = nullptr;
+  }
 }
 
 void ApproachSwathActionServer::handle_accepted(
@@ -142,9 +156,17 @@ void ApproachSwathActionServer::execute(
     return;
   }
 
-  // Publish path
+  // Publish path (even if empty, for visualization)
   path_pub_->publish(path);
   RCLCPP_INFO(this->get_logger(), "Published path with %zu poses", path.poses.size());
+
+  // Check if already at goal (path is empty or very short)
+  if (path.poses.size() <= 1) {
+    RCLCPP_INFO(this->get_logger(), "Already at goal position, skipping path following");
+    result->error_code = ApproachSwathAction::Result::NONE;
+    goal_handle->succeed(result);
+    return;
+  }
 
   // Check for cancellation
   if (is_cancelling_) {
@@ -246,10 +268,12 @@ bool ApproachSwathActionServer::follow_path(
   const std::string & controller_id,
   const std::shared_ptr<GoalHandleApproachSwath> goal_handle)
 {
-  RCLCPP_INFO(this->get_logger(), "Following path");
+  RCLCPP_INFO(this->get_logger(), "Following path with %zu poses", path.poses.size());
 
   auto goal_msg = FollowPath::Goal();
   goal_msg.path = path;
+  // Update path timestamp to current time to avoid stale path rejection
+  goal_msg.path.header.stamp = this->now();
   goal_msg.controller_id = controller_id;
 
   // Use promise/future for synchronization
@@ -287,10 +311,13 @@ bool ApproachSwathActionServer::follow_path(
     return false;
   }
 
-  follow_path_goal_handle_ = goal_handle_future.get();
-  if (!follow_path_goal_handle_) {
-    RCLCPP_ERROR(this->get_logger(), "follow_path goal was rejected");
-    return false;
+  {
+    std::lock_guard<std::mutex> lock(goal_handle_mutex_);
+    follow_path_goal_handle_ = goal_handle_future.get();
+    if (!follow_path_goal_handle_) {
+      RCLCPP_ERROR(this->get_logger(), "follow_path goal was rejected");
+      return false;
+    }
   }
 
   // Wait for result (poll with cancellation check)
@@ -298,8 +325,8 @@ bool ApproachSwathActionServer::follow_path(
     auto status = result_future.wait_for(100ms);
 
     if (is_cancelling_) {
-      RCLCPP_INFO(this->get_logger(), "Cancelling follow_path");
-      follow_path_client_->async_cancel_goal(follow_path_goal_handle_);
+      RCLCPP_INFO(this->get_logger(), "Cancelling follow_path from execute loop");
+      cancel_follow_path();
       // Wait a bit for cancellation to process
       result_future.wait_for(2s);
       return false;
@@ -311,7 +338,10 @@ bool ApproachSwathActionServer::follow_path(
   }
 
   auto result_code = result_future.get();
-  follow_path_goal_handle_ = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(goal_handle_mutex_);
+    follow_path_goal_handle_ = nullptr;
+  }
 
   if (result_code != rclcpp_action::ResultCode::SUCCEEDED) {
     RCLCPP_ERROR(this->get_logger(), "follow_path failed with code: %d",

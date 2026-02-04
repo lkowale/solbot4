@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -72,6 +73,10 @@ private:
 
   // Active goal handle for follow_path (for cancellation)
   GoalHandleFollowPath::SharedPtr follow_path_goal_handle_;
+  std::mutex goal_handle_mutex_;
+
+  // Safe cancellation helper
+  void cancel_follow_path();
 
   // Path publisher
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;

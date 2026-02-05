@@ -1,0 +1,20 @@
+steer:
+# about 40 degrees left/right from center
+  max_left: 250
+  degreess_max_left: 35
+  max_right:  1300
+  degreess_max_right: -35
+  zero: 740
+wheels:
+  width:  0.7
+  length: 1.25
+  diameter: 0.45
+  gear_ratio: 1
+lift:
+  up_position: 800
+  down_position: 1100
+drive:
+  speed_multiplier: 5
+planter:
+  desired_density: 30
+  aospr: 60

@@ -1,0 +1,8 @@
+<library path="gps_line_follower_controller_plugin">
+  <class type="gps_line_follower_controller::GpsLineFollowerController" base_class_type="nav2_core::Controller">
+    <description>
+      Dual-mode controller: uses RPP to approach path, then switches to GPS-on-line
+      following when GPS antenna is within switch_distance of the swath line.
+    </description>
+  </class>
+</library>

@@ -81,13 +81,14 @@
 
             <!-- SWATH STAGE -->
             <!-- Skip if already past swath stage (resuming from turn) -->
+            <!-- Uses GpsLineFollower controller to keep GPS antenna on the swath line -->
             <Fallback name="Swath or skip">
               <CheckStagePast stage="{stage}" check="swath"/>
               <Sequence>
                 <SetStage stage="swath" stage_out="{stage}"/>
                 <RunSwathAction map_points="{map_points}"
                                 planner_id="StraightLine"
-                                controller_id="FollowPath"
+                                controller_id="GpsLineFollower"
                                 path_pub_topic="swath_path"
                                 error_code="{swath_error_code}"/>
               </Sequence>

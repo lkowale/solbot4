@@ -7,7 +7,7 @@ When driving in reverse (negative linear.x), the steering angle calculation
 assumes forward motion kinematics. This node inverts angular.z when linear.x
 is negative to achieve correct reverse steering behavior.
 
-Subscribes to: cmd_vel_nav2 (geometry_msgs/Twist) - Nav2 remaps cmd_vel to this
+Subscribes to: cmd_vel (geometry_msgs/Twist)
 Publishes to: cmd_vel_ackermann (geometry_msgs/Twist)
 """
 
@@ -20,10 +20,10 @@ class AckermannCmdVelPreprocessor(Node):
     def __init__(self):
         super().__init__('ackermann_cmd_vel_preprocessor')
 
-        # Subscribe to cmd_vel_nav2 (Nav2 remaps cmd_vel -> cmd_vel_nav2)
+        # Subscribe to cmd_vel
         self.subscription = self.create_subscription(
             Twist,
-            'cmd_vel_nav2',
+            '/cmd_vel',
             self.cmd_vel_callback,
             10
         )

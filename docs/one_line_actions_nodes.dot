@@ -1,0 +1,121 @@
+// Node diagram for run_one_line_actions.sh
+// Generate image: dot -Tpng one_line_actions_nodes.dot -o one_line_actions_nodes.png
+
+digraph G {
+    rankdir=TB;
+    node [shape=box, style=filled];
+    compound=true;
+
+    // Entry point
+    script [label="run_one_line_actions.sh", shape=ellipse, fillcolor="#ffcccc"];
+
+    // Standalone action servers
+    subgraph cluster_actions {
+        label="Standalone Action Servers";
+        style=filled;
+        fillcolor="#ffe6cc";
+        approach_swath [label="approach_swath_action_node\n/approach_swath"];
+        run_swath [label="run_swath_action_node\n/run_swath"];
+    }
+
+    // Simulation nodes
+    subgraph cluster_sim {
+        label="Simulation (simulation.launch.py)";
+        style=filled;
+        fillcolor="#cce5ff";
+        gz_server [label="gz_sim\n(server)"];
+        gz_client [label="gz_sim\n(client/GUI)"];
+        robot_state_pub [label="robot_state_publisher"];
+        ros_gz_bridge [label="ros_gz_bridge\n(parameter_bridge)"];
+        spawn_model [label="ros_gz_sim\n(create)"];
+        ackermann_preproc [label="ackermann_cmd_vel\n_preprocessor"];
+        odom_cov_inject [label="odom_covariance\n_injector"];
+        imu_cov_inject [label="imu_covariance\n_injector"];
+    }
+
+    // Localization nodes
+    subgraph cluster_localization {
+        label="Localization (ekf_gps_imu.launch.py)";
+        style=filled;
+        fillcolor="#d4edda";
+        navsat_transform [label="navsat_transform_node"];
+        ekf_node [label="ekf_filter_node_odom"];
+    }
+
+    // TF nodes
+    subgraph cluster_tf {
+        label="Static Transforms";
+        style=filled;
+        fillcolor="#f8d7da";
+        tf_map_odom [label="static_transform_publisher\nmap → odom"];
+        tf_map_origin [label="static_transform_publisher\nmap → origin\n(optional)"];
+    }
+
+    // Nav2 nodes
+    subgraph cluster_nav2 {
+        label="Nav2 Stack (navigation.launch.py)\nnav2_container";
+        style=filled;
+        fillcolor="#e2d5f1";
+        controller_server [label="controller_server\n(FollowPath, GpsLineFollower)"];
+        smoother_server [label="smoother_server"];
+        planner_server [label="planner_server\n(StraightLine, GridBased)"];
+        behavior_server [label="behavior_server\n(Spin, BackUp, Wait)"];
+        bt_navigator [label="bt_navigator"];
+        waypoint_follower [label="waypoint_follower"];
+        velocity_smoother [label="velocity_smoother"];
+        lifecycle_manager [label="lifecycle_manager"];
+    }
+
+    // Visualization nodes
+    subgraph cluster_viz {
+        label="Visualization (optional)";
+        style=filled;
+        fillcolor="#fff3cd";
+        mapviz [label="mapviz"];
+        origin_publisher [label="origin_publisher"];
+        rviz [label="rviz2"];
+    }
+
+    // Launch hierarchy
+    script -> approach_swath;
+    script -> run_swath;
+    script -> gz_server [lhead=cluster_sim];
+    script -> navsat_transform [lhead=cluster_localization];
+    script -> tf_map_odom [lhead=cluster_tf];
+    script -> controller_server [lhead=cluster_nav2];
+    script -> mapviz [lhead=cluster_viz, style=dashed];
+
+    // Topic flow
+    subgraph cluster_topics {
+        label="Key Topics";
+        style=filled;
+        fillcolor="#f5f5f5";
+        node [shape=ellipse, fillcolor="#ffffff"];
+
+        gps_fix [label="/gps/fix"];
+        imu_topic [label="/imu"];
+        odom_gps_raw [label="/odometry/gps_raw"];
+        odom_gps [label="/odometry/gps"];
+        odom [label="/odom"];
+        cmd_vel_nav [label="/cmd_vel_nav"];
+        cmd_vel [label="/cmd_vel"];
+        cmd_vel_ack [label="/cmd_vel_ackermann"];
+    }
+
+    // Data flow
+    gps_fix -> navsat_transform;
+    imu_topic -> navsat_transform;
+    imu_topic -> ekf_node;
+    navsat_transform -> odom_gps_raw;
+    odom_gps_raw -> odom_cov_inject;
+    odom_cov_inject -> odom_gps;
+    odom_gps -> ekf_node;
+    ekf_node -> odom;
+
+    bt_navigator -> controller_server;
+    controller_server -> cmd_vel_nav;
+    cmd_vel_nav -> velocity_smoother;
+    velocity_smoother -> cmd_vel;
+    cmd_vel -> ackermann_preproc;
+    ackermann_preproc -> cmd_vel_ack;
+}

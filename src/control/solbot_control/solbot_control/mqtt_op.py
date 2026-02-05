@@ -17,7 +17,7 @@ from geometry_msgs.msg import (Quaternion, Vector3)
 from tf2_ros import TransformBroadcaster
 import json
 from json.decoder import JSONDecodeError
-from opennav_coverage_msgs.msg import JobPaused
+from solbot4_msgs.msg import Pause
 
 class MQTT_op(Node):
     def __init__(self):
@@ -45,10 +45,10 @@ class MQTT_op(Node):
         self.get_logger().info('mqtt_op_bridge started...')
         self.steer = 0.0
         self.speed = 0.0
-        self.cmd_vel_publisher = self.create_publisher(Twist, 'cmd_vel', 10)           
+        self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)           
         self.lift_pos_publisher = self.create_publisher(Int32, 'lift/set_position', 10) 
         self.lift_cmd_publisher = self.create_publisher(String, 'lift/cmd', 10)           
-        self.job_paused_publisher = self.create_publisher(JobPaused, 'job_paused', 10)    
+        self.job_paused_publisher = self.create_publisher(Pause, '/pause', 10)    
         self.planter_cmd_publisher = self.create_publisher(String, 'planter/cmd', 10)     
         self.planter_dd_publisher = self.create_publisher(Int32, 'planter/set_dd', 10)
         self.planter_aospr_publisher = self.create_publisher(Int32, 'planter/set_aospr', 10)
@@ -67,8 +67,10 @@ class MQTT_op(Node):
 
         if topic == "outer/speed":
             message = msg.payload.decode("utf-8")
+            self.get_logger().info(f"Received speed msg: {message}")
             msg_in=json.loads(message)
             self.speed =  float(msg_in["data"])
+            self.get_logger().info(f"Publishing cmd_vel: linear.x={self.speed}, angular.z={self.steer}")
             self.publish_cmd_vel_msg()
 
         if topic == "outer/lift_pos":
@@ -91,8 +93,9 @@ class MQTT_op(Node):
             message = msg.payload.decode("utf-8")
             msg_in=json.loads(message)
             pause_cmd =  int(msg_in["data"])
-            out_msg = JobPaused()   
-            out_msg.data = bool(pause_cmd)
+            out_msg = Pause()
+            out_msg.paused = bool(pause_cmd)
+            out_msg.source = "mqtt"
             out_msg.reason = "User triggered"
             self.job_paused_publisher.publish(out_msg)  
 

@@ -105,20 +105,15 @@ def generate_launch_description():
     navigation_cmd = TimerAction(
         period=2.0,  # Wait 2 seconds for Gazebo clock and EKF to start publishing TF
         actions=[
-            GroupAction(
-                actions=[
-                    SetRemap(src='/cmd_vel', dst='/cmd_vel_nav2'),
-                    IncludeLaunchDescription(
-                        PythonLaunchDescriptionSource(
-                            os.path.join(nav2_bringup_dir, 'launch', 'navigation.launch.py')),
-                        launch_arguments={
-                            'use_sim_time': use_sim_time,
-                            'params_file': params_file,
-                            'autostart': autostart,
-                            'use_composition': use_composition,
-                        }.items()
-                    )
-                ]
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(nav2_bringup_dir, 'launch', 'navigation.launch.py')),
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'params_file': params_file,
+                    'autostart': autostart,
+                    'use_composition': use_composition,
+                }.items()
             )
         ]
     )

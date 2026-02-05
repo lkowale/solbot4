@@ -26,7 +26,7 @@ class DriveControl(Node):
         # self.yaml_params['steer']['max_left']
         self.cmd_vel_sub = self.create_subscription(
             Twist,
-            'cmd_vel',
+            '/cmd_vel',
             self.listener_callback,
             10)
 
